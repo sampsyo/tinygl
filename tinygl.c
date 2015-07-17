@@ -8,36 +8,85 @@ const double PI = 3.141592;
 const unsigned int NVERTICES = 13;
 const unsigned int NDIMENSIONS = 3;
 
+static GLboolean printShaderInfoLog(GLuint shader, const char *str)
+{
+  GLint status;
+  glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+  if (status == GL_FALSE) printf("shader compile ERROR\n");
+
+  GLsizei bufSize;
+  glGetShaderiv(shader, GL_INFO_LOG_LENGTH , &bufSize);
+
+  if (bufSize > 1)
+    {
+      GLchar infoLog[1024];
+      GLsizei length;
+      glGetShaderInfoLog(shader, bufSize, &length, infoLog);
+      printf("ERROR:%s\n",infoLog);
+    }
+
+  return (GLboolean)status;
+}
+
+static GLboolean printProgramInfoLog(GLuint program)
+{
+  GLint status;
+  glGetProgramiv(program, GL_LINK_STATUS, &status);
+  if (status == GL_FALSE) printf("Link error\n");
+
+  GLsizei bufSize;
+  glGetProgramiv(program, GL_INFO_LOG_LENGTH , &bufSize);
+
+  if (bufSize > 1)
+  {
+    GLchar infoLog[1024];
+    GLsizei length;
+    glGetProgramInfoLog(program, bufSize, &length, infoLog);
+    fprintf(stderr,"%s",infoLog);
+  }
+  return (GLboolean)status;
+}
+
+
 GLuint create_shader() {
   // The vertex shader.
   GLuint vshader = glCreateShader(GL_VERTEX_SHADER);
   const char *vertex_shader = " \
-    in vec3 position; \
+    #version 150\n\
+    /* WTF EXPLAIN BROKEN VERSIONING SCHEME */ \
+    /* WTF WHY VEC4 */ \
+    in vec4 position; \
     out vec4 myPos; \
     void main() { \
       myPos = position; \
-      gl_Position = gl_Vertex; \
+      gl_Position = position; \
     } \
   ";
   glShaderSource(vshader, 1, &vertex_shader, 0);
   glCompileShader(vshader);
+  printShaderInfoLog(vshader, "vertex shader");
 
   // The fragment (pixel) shader.
   GLuint fshader = glCreateShader(GL_FRAGMENT_SHADER);
   const char *fragment_shader = " \
+    #version 150\n\
     uniform float phase; \
     in vec4 myPos; \
+    /* The output variable declared for a fragment shader is *implicitly* \
+     * the color of the pixel. */ \
+    out vec4 color; \
     void main() { \
       float r2 = (myPos.x + 1.) * (myPos.x + 1.) + \
                  (myPos.y + 1.) * (myPos.y + 1.); \
-      gl_FragColor = vec4((myPos.x + 1.) / r2, \
-                          (myPos.y + 1.) / r2, \
-                          phase, \
-                          1.); \
+      color = vec4((myPos.x + 1.) / r2, \
+                   (myPos.y + 1.) / r2, \
+                   phase, \
+                   1.); \
     } \
   ";
   glShaderSource(fshader, 1, &fragment_shader, 0);
   glCompileShader(fshader);
+  printShaderInfoLog(fshader, "fragment shader");
 
   // Create a program that stitches the two shader stages together.
   GLuint shader_program = glCreateProgram();
@@ -48,6 +97,7 @@ GLuint create_shader() {
 
   // Link the program so it's ready to apply during drawing.
   glLinkProgram(shader_program);
+  printProgramInfoLog(shader_program);
   return shader_program;
 }
 
@@ -86,10 +136,12 @@ int main(int argc, char **argv){
 
   glGenBuffers(1, &vbo_id);
   glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(points), NULL, GL_DYNAMIC_DRAW);
+  // WTF is DYNAMIC_DRAW?
 
+  printf("position is %i\n", loc_position);
   glVertexAttribPointer(loc_position, NDIMENSIONS, GL_FLOAT, GL_FALSE, 0,
-                        points);
+                        NULL);
   glEnableVertexAttribArray(loc_position);
 
   // Initialize the time to zero. We'll update it on every trip
@@ -120,6 +172,10 @@ int main(int argc, char **argv){
 
     // Now draw the shape using the shader.
     // glEnableClientState(GL_VERTEX_ARRAY);
+    // WTF update the data in the points array?
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_DYNAMIC_DRAW);
+
     glBindVertexArray(vao_id);
     glDrawArrays(GL_TRIANGLE_FAN, 0, NVERTICES);
     // glDisableClientState(GL_VERTEX_ARRAY);
@@ -131,6 +187,8 @@ int main(int argc, char **argv){
     // Advance the time counter for the next frame.
     t += 0.01;
   }
+
+  // WTF destroy VAO and VBO
 
   // Teardown.
   glfwDestroyWindow(window);
