@@ -5,13 +5,13 @@ endif
 
 ifeq ($(shell uname),Darwin)
 # for Mac 
-LIB += -framework Cocoa -framework OpenGL -framework GLUT -framework IOKit -framework Carbon -L/usr/local/lib/ -lglfw
+LIB += -framework Cocoa -framework OpenGL -framework GLUT -framework IOKit -framework Carbon -L/usr/local/lib/ -lglfw3
 endif
 
-CC = gcc 
-OPT += -O3 -Wall 
+CC = cc -I/usr/local/include
+OPT += -g # -O3 -Wall 
 # OPT += -Wno-deprecated
-OBJS1 = donothing.o 
+OBJS1 = nothing.o 
 OBJS2 = dodecagon.o 
 OBJS3 = rectangle.o
 OBJS4 = playground.o
