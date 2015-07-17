@@ -76,8 +76,8 @@ int main(int argc, char **argv){
     // Position (rotate) the shape by updating its vertices.
     for (int i = 0; i < VERTICES; ++i) {
       float *coords = points + DIMENSIONS * i;
-      coords[0] = cos(360. / 12. * PI / 180. * i + t);
-      coords[1] = sin(360. / 12. * PI / 180. * i + t);
+      coords[0] = cos(360. / (VERTICES - 1) * PI / 180. * i + t);
+      coords[1] = sin(360. / (VERTICES - 1) * PI / 180. * i + t);
       coords[2] = 0.;
     }
 
