@@ -4,7 +4,9 @@
 #include <stdlib.h>
 #include <math.h>
 
-const double pi = 3.141592;
+const double PI = 3.141592;
+const unsigned int VERTICES = 13;
+const unsigned int DIMENSIONS = 3;
 
 GLuint create_shader() {
   // The vertex shader.
@@ -61,8 +63,9 @@ int main(int argc, char **argv){
   // Compile the shader program.
   GLuint program = create_shader();
 
-  // An array for the vertices of the shape we will to draw.
-  float points[13 * 3];
+  // An array for the vertices of the shape we will to draw. We need 3
+  // coordinates per point for a 3-dimensional space.
+  float points[VERTICES * DIMENSIONS];
 
   // Initialize the time to zero. We'll update it on every trip
   // through the loop.
@@ -71,10 +74,11 @@ int main(int argc, char **argv){
   // The main draw loop. (Terminates when the user closes the window.)
   while (!glfwWindowShouldClose(window)) {
     // Position (rotate) the shape by updating its vertices.
-    for(int i = 0; i < 13; ++i){
-      points[3 * i] = cos(360. / 12. * pi / 180. * i + t);
-      points[3 * i + 1] = sin(360. / 12. * pi / 180. * i + t);
-      points[3 * i + 2] = 0.;
+    for (int i = 0; i < VERTICES; ++i) {
+      float *coords = points + DIMENSIONS * i;
+      coords[0] = cos(360. / 12. * PI / 180. * i + t);
+      coords[1] = sin(360. / 12. * PI / 180. * i + t);
+      coords[2] = 0.;
     }
 
     // Clear the frame so we can start drawing to it.
@@ -89,8 +93,8 @@ int main(int argc, char **argv){
 
     // Now draw the shape using the shader.
     glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer(3, GL_FLOAT, 0, points);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 13);
+    glVertexPointer(DIMENSIONS, GL_FLOAT, 0, points);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, VERTICES);
     glDisableClientState(GL_VERTEX_ARRAY);
 
     // Display the frame and get window events.
