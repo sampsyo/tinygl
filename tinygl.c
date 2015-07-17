@@ -61,6 +61,11 @@ int main(int argc, char **argv){
   // Compile the shader program.
   GLuint program = create_shader();
 
+  // Also get the "location" (just an ID) of a variable in the shader
+  // program. We will use this to communicate to the shader inside the draw
+  // loop.
+  GLuint loc_phase = glGetUniformLocation(program, "phase");
+
   // An array for the vertices of the shape we will to draw. We need 3
   // coordinates per point for a 3-dimensional space.
   float points[NVERTICES * NDIMENSIONS];
@@ -85,9 +90,11 @@ int main(int argc, char **argv){
     // Use our shader program to render the shape.
     glUseProgram(program);
 
-    // Assign to a shader "uniform" variable: phase = 4 * t
-    GLuint phase_id = glGetUniformLocation(program, "phase");
-    glUniform1f(phase_id, sin(4 * t));
+    // Assign to a shader "uniform" variable. A "uniform" is a value passed
+    // from the CPU to the GPU that is the same for all invocations (i.e., all
+    // vertices). So this line essentially performs the assignment:
+    // phase = sin(4 * t)
+    glUniform1f(loc_phase, sin(4 * t));
 
     // Now draw the shape using the shader.
     glEnableClientState(GL_VERTEX_ARRAY);
