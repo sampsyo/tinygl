@@ -1,8 +1,8 @@
+#define GLFW_INCLUDE_GLCOREARB
 #include <GLFW/glfw3.h>
-#include <OpenGL/glext.h>
-#include <OpenGL/gl3ext.h>
 #include <stdlib.h>
 #include <math.h>
+#include <stdio.h>
 
 const double PI = 3.141592;
 const unsigned int NVERTICES = 13;
@@ -12,9 +12,10 @@ GLuint create_shader() {
   // The vertex shader.
   GLuint vshader = glCreateShader(GL_VERTEX_SHADER);
   const char *vertex_shader = " \
-    varying vec4 myPos; \
+    in vec3 position; \
+    out vec4 myPos; \
     void main() { \
-      myPos = gl_Vertex; \
+      myPos = position; \
       gl_Position = gl_Vertex; \
     } \
   ";
@@ -25,7 +26,7 @@ GLuint create_shader() {
   GLuint fshader = glCreateShader(GL_FRAGMENT_SHADER);
   const char *fragment_shader = " \
     uniform float phase; \
-    varying vec4 myPos; \
+    in vec4 myPos; \
     void main() { \
       float r2 = (myPos.x + 1.) * (myPos.x + 1.) + \
                  (myPos.y + 1.) * (myPos.y + 1.); \
@@ -51,17 +52,24 @@ GLuint create_shader() {
 }
 
 int main(int argc, char **argv){
-  // Set up the OpenGL context and the GLFW window that contains it.
+  // Set up the OpenGL context and the GLFW window that contains it. We'll
+  // request a reasonably modern version of OpenGL, >= 3.2.
   glfwInit();
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   GLFWwindow* window = glfwCreateWindow(512, 512, "Look at Me!", NULL, NULL);
   glfwMakeContextCurrent(window);
   glfwSwapInterval(1);
-  glClearColor(0., 0., 0.5, 1.);
+
+  // Which OpenGL version did we actually get?
+  printf("OpenGL version %s\n", glGetString(GL_VERSION));
 
   // Compile the shader program.
   GLuint program = create_shader();
 
-  // Also get the "location" (just an ID) of a variable in the shader
+  // Get the "location" (just an ID) of a "uniform" variable in the shader
   // program. We will use this to communicate to the shader inside the draw
   // loop.
   GLuint loc_phase = glGetUniformLocation(program, "phase");
@@ -69,6 +77,20 @@ int main(int argc, char **argv){
   // An array for the vertices of the shape we will to draw. We need 3
   // coordinates per point for a 3-dimensional space.
   float points[NVERTICES * NDIMENSIONS];
+
+  GLuint loc_position = glGetAttribLocation(program, "position");
+
+  GLuint vao_id, vbo_id;
+  glGenVertexArrays(1, &vao_id);
+  glBindVertexArray(vao_id);
+
+  glGenBuffers(1, &vbo_id);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW);
+
+  glVertexAttribPointer(loc_position, NDIMENSIONS, GL_FLOAT, GL_FALSE, 0,
+                        points);
+  glEnableVertexAttribArray(loc_position);
 
   // Initialize the time to zero. We'll update it on every trip
   // through the loop.
@@ -97,10 +119,10 @@ int main(int argc, char **argv){
     glUniform1f(loc_phase, sin(4 * t));
 
     // Now draw the shape using the shader.
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer(NDIMENSIONS, GL_FLOAT, 0, points);
+    // glEnableClientState(GL_VERTEX_ARRAY);
+    glBindVertexArray(vao_id);
     glDrawArrays(GL_TRIANGLE_FAN, 0, NVERTICES);
-    glDisableClientState(GL_VERTEX_ARRAY);
+    // glDisableClientState(GL_VERTEX_ARRAY);
 
     // Display the frame and get window events.
     glfwSwapBuffers(window);
