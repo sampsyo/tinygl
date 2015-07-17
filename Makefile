@@ -1,6 +1,6 @@
 TARGET := tinygl
 SOURCE := tinygl.c
-CFLAGS := -I/usr/local/include -g
+CFLAGS := -I/usr/local/include -g -std=gnu11
 LIBFLAGS := -L/usr/local/lib -lglfw3 -framework OpenGL
 
 $(TARGET): $(SOURCE)

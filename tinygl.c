@@ -6,21 +6,29 @@
 
 const double pi = 3.141592;
 
-static const GLchar *vertex_shader_source=
-  {
-    "attribute vec4 position;attribute vec3 normal;attribute vec4 color;varying vec4 vColor;\n"
-    "uniform float uniID;varying vec3 varyingnormal;\n"
-    "void main()\n"
-    "{vColor = position;   gl_Position = position; varyingnormal = vec3(position.x,position.y,0.);}\n"
-  };
+static const GLchar *vertex_shader_source = " \
+    attribute vec4 position; \
+    attribute vec3 normal; \
+    attribute vec4 color; \
+    varying vec4 vColor; \
+    uniform float uniID; \
+    varying vec3 varyingnormal; \
+    void main() { \
+        vColor = position; \
+        gl_Position = position; \
+        varyingnormal = vec3(position.x,position.y,0.); \
+    } \
+";
 
-static const GLchar *fragment_shader_source=
-  {
-    "uniform float uniID;varying vec4 vColor;\nvarying vec3 varyingnormal;\n"
-    "void main()\n"
-    "{ float r2 = (vColor.x+1.)*(vColor.x+1.)+(vColor.y+1.)*(vColor.y+1.);"
-    "gl_FragColor = vec4((vColor.x+1.)/r2,(vColor.y+1.)/r2,uniID,1.);}\n"
-  };
+static const GLchar *fragment_shader_source = " \
+    uniform float uniID; \
+    varying vec4 vColor; \
+    varying vec3 varyingnormal; \
+    void main() { \
+        float r2 = (vColor.x+1.)*(vColor.x+1.)+(vColor.y+1.)*(vColor.y+1.); \
+        gl_FragColor = vec4((vColor.x+1.)/r2,(vColor.y+1.)/r2,uniID,1.); \
+    } \
+";
 
 GLuint create_shader() {
   GLuint vshader = glCreateShader(GL_VERTEX_SHADER);
