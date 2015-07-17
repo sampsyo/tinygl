@@ -11,10 +11,9 @@ GLuint create_shader() {
   GLuint vshader = glCreateShader(GL_VERTEX_SHADER);
   const char *vertex_shader = " \
     attribute vec4 position; \
-    varying vec4 vColor; \
-    uniform float uniID; \
+    varying vec4 myPos; \
     void main() { \
-      vColor = position; \
+      myPos = position; \
       gl_Position = position; \
     } \
   ";
@@ -24,11 +23,11 @@ GLuint create_shader() {
   // The fragment (pixel) shader.
   GLuint fshader = glCreateShader(GL_FRAGMENT_SHADER);
   const char *fragment_shader = " \
-    uniform float uniID; \
-    varying vec4 vColor; \
+    uniform float phase; \
+    varying vec4 myPos; \
     void main() { \
-      float r2 = (vColor.x+1.)*(vColor.x+1.)+(vColor.y+1.)*(vColor.y+1.); \
-      gl_FragColor = vec4((vColor.x+1.)/r2,(vColor.y+1.)/r2,uniID,1.); \
+      float r2 = (myPos.x+1.)*(myPos.x+1.)+(myPos.y+1.)*(myPos.y+1.); \
+      gl_FragColor = vec4((myPos.x+1.)/r2,(myPos.y+1.)/r2,phase,1.); \
     } \
   ";
   glShaderSource(fshader, 1, &fragment_shader, 0);
@@ -74,11 +73,12 @@ int main(int argc, char **argv){
     // Clear the frame so we can start drawing to it.
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // Use our shader program.
+    // Use our shader program to render the shape.
     glUseProgram(program);
-    float univar = sin(4.*t);
-    GLuint uniID = glGetUniformLocation(program, "uniID");
-    glUniform1f(uniID, univar);
+
+    // Assign to a shader "uniform" variable: phase = 4 * t
+    GLuint phase_id = glGetUniformLocation(program, "phase");
+    glUniform1f(phase_id, sin(4 * t));
 
     // Now draw the shape using the shader.
     glEnableClientState(GL_VERTEX_ARRAY);
