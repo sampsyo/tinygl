@@ -6,39 +6,40 @@
 
 const double pi = 3.141592;
 
-static const GLchar *vertex_shader_source = " \
-    attribute vec4 position; \
-    attribute vec3 normal; \
-    attribute vec4 color; \
-    varying vec4 vColor; \
-    uniform float uniID; \
-    varying vec3 varyingnormal; \
-    void main() { \
-        vColor = position; \
-        gl_Position = position; \
-        varyingnormal = vec3(position.x,position.y,0.); \
-    } \
-";
-
-static const GLchar *fragment_shader_source = " \
-    uniform float uniID; \
-    varying vec4 vColor; \
-    varying vec3 varyingnormal; \
-    void main() { \
-        float r2 = (vColor.x+1.)*(vColor.x+1.)+(vColor.y+1.)*(vColor.y+1.); \
-        gl_FragColor = vec4((vColor.x+1.)/r2,(vColor.y+1.)/r2,uniID,1.); \
-    } \
-";
-
 GLuint create_shader() {
+  // The vertex shader.
   GLuint vshader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(vshader,1,&vertex_shader_source, 0);
+  const char *vertex_shader = " \
+      attribute vec4 position; \
+      attribute vec3 normal; \
+      attribute vec4 color; \
+      varying vec4 vColor; \
+      uniform float uniID; \
+      varying vec3 varyingnormal; \
+      void main() { \
+          vColor = position; \
+          gl_Position = position; \
+          varyingnormal = vec3(position.x,position.y,0.); \
+      } \
+  ";
+  glShaderSource(vshader, 1, &vertex_shader, 0);
   glCompileShader(vshader);
 
+  // The fragment (pixel) shader.
   GLuint fshader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(fshader,1,&fragment_shader_source, 0);
+  const char *fragment_shader = " \
+      uniform float uniID; \
+      varying vec4 vColor; \
+      varying vec3 varyingnormal; \
+      void main() { \
+          float r2 = (vColor.x+1.)*(vColor.x+1.)+(vColor.y+1.)*(vColor.y+1.); \
+          gl_FragColor = vec4((vColor.x+1.)/r2,(vColor.y+1.)/r2,uniID,1.); \
+      } \
+  ";
+  glShaderSource(fshader, 1, &fragment_shader, 0);
   glCompileShader(fshader);
 
+  // Create a program that stitches the two shader stages together.
   GLuint shader_program = glCreateProgram();
   glAttachShader(shader_program,vshader);
   glDeleteShader(vshader);
