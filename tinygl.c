@@ -12,11 +12,10 @@ GLuint create_shader() {
   // The vertex shader.
   GLuint vshader = glCreateShader(GL_VERTEX_SHADER);
   const char *vertex_shader = " \
-    attribute vec4 position; \
     varying vec4 myPos; \
     void main() { \
-      myPos = position; \
-      gl_Position = position; \
+      myPos = gl_Vertex; \
+      gl_Position = gl_Vertex; \
     } \
   ";
   glShaderSource(vshader, 1, &vertex_shader, 0);
@@ -46,9 +45,8 @@ GLuint create_shader() {
   glAttachShader(shader_program,fshader);
   glDeleteShader(fshader);
 
-  glBindAttribLocation(shader_program, 0, "position");
+  // Link the program so it's ready to apply during drawing.
   glLinkProgram(shader_program);
-
   return shader_program;
 }
 
