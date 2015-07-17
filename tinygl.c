@@ -22,7 +22,7 @@ static const GLchar *fragment_shader_source=
     "gl_FragColor = vec4((vColor.x+1.)/r2,(vColor.y+1.)/r2,uniID,1.);}\n"
   };
 
-GLuint createshader() {
+GLuint create_shader() {
   GLuint vshader = glCreateShader(GL_VERTEX_SHADER);
   glShaderSource(vshader,1,&vertex_shader_source, 0);
   glCompileShader(vshader);
@@ -60,13 +60,13 @@ int main(int argc, char **argv){
   glClearColor(0.,0.,0.5,1.);
 
   // Compile the shader program.
-  GLuint program = createshader();
+  GLuint program = create_shader();
 
   // Initialize the time to zero. We'll update it on every trip
   // through the loop.
   float t = 0;
 
-  while(!glfwWindowShouldClose(window)){
+  while (!glfwWindowShouldClose(window)) {
     // Clear the frame so we can start drawing to it.
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -90,10 +90,13 @@ int main(int argc, char **argv){
     }
     t += 0.01;
 
-    // Display the frame.
+    // Display the frame and get window events.
     glfwSwapBuffers(window);
+    glfwPollEvents();
   }
 
+  // Teardown.
+  glfwDestroyWindow(window);
   glfwTerminate();
   return 0;
 }
