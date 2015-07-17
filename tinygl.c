@@ -26,8 +26,12 @@ GLuint create_shader() {
     uniform float phase; \
     varying vec4 myPos; \
     void main() { \
-      float r2 = (myPos.x+1.)*(myPos.x+1.)+(myPos.y+1.)*(myPos.y+1.); \
-      gl_FragColor = vec4((myPos.x+1.)/r2,(myPos.y+1.)/r2,phase,1.); \
+      float r2 = (myPos.x + 1.) * (myPos.x + 1.) + \
+                 (myPos.y + 1.) * (myPos.y + 1.); \
+      gl_FragColor = vec4((myPos.x + 1.) / r2, \
+                          (myPos.y + 1.) / r2, \
+                          phase, \
+                          1.); \
     } \
   ";
   glShaderSource(fshader, 1, &fragment_shader, 0);
