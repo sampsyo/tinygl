@@ -47,14 +47,6 @@ GLuint create_shader() {
 }
 
 int main(int argc, char **argv){
-  // Set up the vertices for the shape we want to draw.
-  float points[13 * 3];
-  for(int i = 0; i < 13; ++i){
-    points[3 * i] = cos(360. / 12. * pi / 180. * i);
-    points[3 * i + 1] = sin(360. / 12. * pi / 180. * i);
-    points[3 * i + 2] = 0.;
-  }
-
   // Set up the OpenGL context and the GLFW window that contains it.
   glfwInit();
   GLFWwindow* window = glfwCreateWindow(512, 512, "Look at Me!", NULL, NULL);
@@ -65,12 +57,22 @@ int main(int argc, char **argv){
   // Compile the shader program.
   GLuint program = create_shader();
 
+  // An array for the vertices of the shape we will to draw.
+  float points[13 * 3];
+
   // Initialize the time to zero. We'll update it on every trip
   // through the loop.
   float t = 0;
 
   // The main draw loop. (Terminates when the user closes the window.)
   while (!glfwWindowShouldClose(window)) {
+    // Position (rotate) the shape by updating its vertices.
+    for(int i = 0; i < 13; ++i){
+      points[3 * i] = cos(360. / 12. * pi / 180. * i + t);
+      points[3 * i + 1] = sin(360. / 12. * pi / 180. * i + t);
+      points[3 * i + 2] = 0.;
+    }
+
     // Clear the frame so we can start drawing to it.
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -87,17 +89,12 @@ int main(int argc, char **argv){
     glDrawArrays(GL_TRIANGLE_FAN, 0, 13);
     glDisableClientState(GL_VERTEX_ARRAY);
 
-    // Rotate the shape and update the timestep.
-    for(int i = 0; i < 13; ++i){
-      points[3 * i] = cos(360. / 12. * pi / 180. * i + t);
-      points[3 * i + 1] = sin(360. / 12. * pi / 180. * i + t);
-      points[3 * i + 2] = 0.;
-    }
-    t += 0.01;
-
     // Display the frame and get window events.
     glfwSwapBuffers(window);
     glfwPollEvents();
+
+    // Advance the time counter for the next frame.
+    t += 0.01;
   }
 
   // Teardown.
