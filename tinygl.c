@@ -7,44 +7,32 @@
 const double PI = 3.141592;
 const unsigned int NVERTICES = 13;
 const unsigned int NDIMENSIONS = 3;
+const unsigned int BUFSIZE = 1024;  // For error logs.
 
-static GLboolean printShaderInfoLog(GLuint shader, const char *str)
-{
+void error_check_shader(GLuint shader, const char *kind) {
+  GLchar infoLog[BUFSIZE];
+  GLsizei length;
+  glGetShaderInfoLog(shader, BUFSIZE, &length, infoLog);
+  if (length)
+    fprintf(stderr, "%s shader log:\n%s", kind, infoLog);
+
   GLint status;
   glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
-  if (status == GL_FALSE) printf("shader compile ERROR\n");
-
-  GLsizei bufSize;
-  glGetShaderiv(shader, GL_INFO_LOG_LENGTH , &bufSize);
-
-  if (bufSize > 1)
-    {
-      GLchar infoLog[1024];
-      GLsizei length;
-      glGetShaderInfoLog(shader, bufSize, &length, infoLog);
-      printf("ERROR:%s\n",infoLog);
-    }
-
-  return (GLboolean)status;
+  if (status == GL_FALSE)
+    exit(1);
 }
 
-static GLboolean printProgramInfoLog(GLuint program)
-{
+void error_check_program(GLuint program) {
+  GLchar infoLog[BUFSIZE];
+  GLsizei length;
+  glGetProgramInfoLog(program, BUFSIZE, &length, infoLog);
+  if (length)
+    fprintf(stderr, "program log:\n%s", infoLog);
+
   GLint status;
   glGetProgramiv(program, GL_LINK_STATUS, &status);
-  if (status == GL_FALSE) printf("Link error\n");
-
-  GLsizei bufSize;
-  glGetProgramiv(program, GL_INFO_LOG_LENGTH , &bufSize);
-
-  if (bufSize > 1)
-  {
-    GLchar infoLog[1024];
-    GLsizei length;
-    glGetProgramInfoLog(program, bufSize, &length, infoLog);
-    fprintf(stderr,"%s",infoLog);
-  }
-  return (GLboolean)status;
+  if (status == GL_FALSE)
+    exit(1);
 }
 
 
@@ -64,7 +52,7 @@ GLuint create_shader() {
   ";
   glShaderSource(vshader, 1, &vertex_shader, 0);
   glCompileShader(vshader);
-  printShaderInfoLog(vshader, "vertex shader");
+  error_check_shader(vshader, "vertex");
 
   // The fragment (pixel) shader.
   GLuint fshader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -86,7 +74,7 @@ GLuint create_shader() {
   ";
   glShaderSource(fshader, 1, &fragment_shader, 0);
   glCompileShader(fshader);
-  printShaderInfoLog(fshader, "fragment shader");
+  error_check_shader(fshader, "fragment");
 
   // Create a program that stitches the two shader stages together.
   GLuint shader_program = glCreateProgram();
@@ -97,7 +85,7 @@ GLuint create_shader() {
 
   // Link the program so it's ready to apply during drawing.
   glLinkProgram(shader_program);
-  printProgramInfoLog(shader_program);
+  error_check_program(shader_program);
   return shader_program;
 }
 
@@ -129,6 +117,7 @@ int main(int argc, char **argv){
   float points[NVERTICES * NDIMENSIONS];
 
   GLuint loc_position = glGetAttribLocation(program, "position");
+  // WTF check for error
 
   GLuint vao_id, vbo_id;
   glGenVertexArrays(1, &vao_id);
@@ -139,7 +128,6 @@ int main(int argc, char **argv){
   glBufferData(GL_ARRAY_BUFFER, sizeof(points), NULL, GL_DYNAMIC_DRAW);
   // WTF is DYNAMIC_DRAW?
 
-  printf("position is %i\n", loc_position);
   glVertexAttribPointer(loc_position, NDIMENSIONS, GL_FLOAT, GL_FALSE, 0,
                         NULL);
   glEnableVertexAttribArray(loc_position);
