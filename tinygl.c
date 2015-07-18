@@ -36,17 +36,17 @@ void shader_error_check(GLuint object, const char *kind,
 GLuint create_shader() {
   // The vertex shader.
   GLuint vshader = glCreateShader(GL_VERTEX_SHADER);
-  const char *vertex_shader = " \
-    #version 150\n\
-    /* WTF EXPLAIN BROKEN VERSIONING SCHEME */ \
-    /* WTF WHY VEC4 */ \
-    in vec4 position; \
-    out vec4 myPos; \
-    void main() { \
-      myPos = position; \
-      gl_Position = position; \
-    } \
-  ";
+  const char *vertex_shader =
+    "#version 150\n"
+    // WTF EXPLAIN BROKEN VERSIONING SCHEME
+    // WTF WHY VEC4
+    "in vec4 position;\n"
+    "out vec4 myPos;\n"
+    "void main() {\n"
+    "  myPos = position;\n"
+    "  gl_Position = position;\n"
+    "}\n"
+  ;
   glShaderSource(vshader, 1, &vertex_shader, 0);
   glCompileShader(vshader);
   shader_error_check(vshader, "vertex shader", glGetShaderInfoLog,
@@ -54,22 +54,22 @@ GLuint create_shader() {
 
   // The fragment (pixel) shader.
   GLuint fshader = glCreateShader(GL_FRAGMENT_SHADER);
-  const char *fragment_shader = " \
-    #version 150\n\
-    uniform float phase; \
-    in vec4 myPos; \
-    /* The output variable declared for a fragment shader is *implicitly* \
-     * the color of the pixel. */ \
-    out vec4 color; \
-    void main() { \
-      float r2 = (myPos.x + 1.) * (myPos.x + 1.) + \
-                 (myPos.y + 1.) * (myPos.y + 1.); \
-      color = vec4((myPos.x + 1.) / r2, \
-                   (myPos.y + 1.) / r2, \
-                   phase, \
-                   1.); \
-    } \
-  ";
+  const char *fragment_shader =
+    "#version 150\n"
+    "uniform float phase;\n"
+    "in vec4 myPos;\n"
+    // The output variable declared for a fragment shader is *implicitly*
+    // the color of the pixel.
+    "out vec4 color;\n"
+    "void main() {\n"
+    "  float r2 = (myPos.x + 1.) * (myPos.x + 1.) +\n"
+    "             (myPos.y + 1.) * (myPos.y + 1.);\n"
+    "  color = vec4((myPos.x + 1.) / r2,\n"
+    "               (myPos.y + 1.) / r2,\n"
+    "               phase,\n"
+    "               1.);\n"
+    "}\n"
+  ;
   glShaderSource(fshader, 1, &fragment_shader, 0);
   glCompileShader(fshader);
   shader_error_check(fshader, "fragment shader", glGetShaderInfoLog,
@@ -77,9 +77,9 @@ GLuint create_shader() {
 
   // Create a program that stitches the two shader stages together.
   GLuint shader_program = glCreateProgram();
-  glAttachShader(shader_program,vshader);
+  glAttachShader(shader_program, vshader);
   glDeleteShader(vshader);
-  glAttachShader(shader_program,fshader);
+  glAttachShader(shader_program, fshader);
   glDeleteShader(fshader);
 
   // Link the program so it's ready to apply during drawing.
