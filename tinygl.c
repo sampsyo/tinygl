@@ -10,11 +10,11 @@ const unsigned int NDIMENSIONS = 3;
 const unsigned int BUFSIZE = 1024;  // For error logs.
 
 void error_check_shader(GLuint shader, const char *kind) {
-  GLchar infoLog[BUFSIZE];
+  GLchar log[BUFSIZE];
   GLsizei length;
-  glGetShaderInfoLog(shader, BUFSIZE, &length, infoLog);
+  glGetShaderInfoLog(shader, BUFSIZE, &length, log);
   if (length)
-    fprintf(stderr, "%s shader log:\n%s", kind, infoLog);
+    fprintf(stderr, "%s shader log:\n%s", kind, log);
 
   GLint status;
   glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
@@ -22,19 +22,19 @@ void error_check_shader(GLuint shader, const char *kind) {
     exit(1);
 }
 
+// WTF deduplicate this
 void error_check_program(GLuint program) {
-  GLchar infoLog[BUFSIZE];
+  GLchar log[BUFSIZE];
   GLsizei length;
-  glGetProgramInfoLog(program, BUFSIZE, &length, infoLog);
+  glGetProgramInfoLog(program, BUFSIZE, &length, log);
   if (length)
-    fprintf(stderr, "program log:\n%s", infoLog);
+    fprintf(stderr, "program link log:\n%s", log);
 
   GLint status;
   glGetProgramiv(program, GL_LINK_STATUS, &status);
   if (status == GL_FALSE)
     exit(1);
 }
-
 
 GLuint create_shader() {
   // The vertex shader.
