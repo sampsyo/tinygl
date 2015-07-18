@@ -9,33 +9,30 @@ const unsigned int NVERTICES = 13;
 const unsigned int NDIMENSIONS = 3;
 const unsigned int BUFSIZE = 1024;  // For error logs.
 
-void error_check_shader(GLuint shader, const char *kind) {
+// Check for errors when compiling or linking the shader program. We need this
+// 3 times: compiling the vertex shader, compiling the fragment (pixel)
+// shader, and linking the two together into a complete OpenGL "program".
+typedef void (*GetLogFunc)(GLuint, GLsizei, GLsizei *, GLchar *);
+typedef void (*GetParamFunc)(GLuint, GLenum, GLint *);
+void shader_error_check(GLuint object, const char *kind,
+        GetLogFunc getLog, GetParamFunc getParam, GLenum param) {
+  // Get the error/warning log using either `glGetShaderInfoLog` or
+  // `glGetProgramInfoLog` (as `getLog`).
   GLchar log[BUFSIZE];
   GLsizei length;
-  glGetShaderInfoLog(shader, BUFSIZE, &length, log);
+  getLog(object, BUFSIZE, &length, log);
   if (length)
-    fprintf(stderr, "%s shader log:\n%s", kind, log);
+    fprintf(stderr, "%s log:\n%s", kind, log);
 
+  // Get the status flag using either `glGetShaderiv` with the
+  // `GL_COMPILE_STATUS` parameter,  or `glGetProgramiv` with `GL_LINK_STATUS`.
   GLint status;
-  glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+  getParam(object, param, &status);
   if (status == GL_FALSE)
     exit(1);
 }
 
-// WTF deduplicate this
-void error_check_program(GLuint program) {
-  GLchar log[BUFSIZE];
-  GLsizei length;
-  glGetProgramInfoLog(program, BUFSIZE, &length, log);
-  if (length)
-    fprintf(stderr, "program link log:\n%s", log);
-
-  GLint status;
-  glGetProgramiv(program, GL_LINK_STATUS, &status);
-  if (status == GL_FALSE)
-    exit(1);
-}
-
+// Compile and link the GLSL shader source.
 GLuint create_shader() {
   // The vertex shader.
   GLuint vshader = glCreateShader(GL_VERTEX_SHADER);
@@ -52,7 +49,8 @@ GLuint create_shader() {
   ";
   glShaderSource(vshader, 1, &vertex_shader, 0);
   glCompileShader(vshader);
-  error_check_shader(vshader, "vertex");
+  shader_error_check(vshader, "vertex shader", glGetShaderInfoLog,
+                     glGetShaderiv, GL_COMPILE_STATUS);
 
   // The fragment (pixel) shader.
   GLuint fshader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -74,7 +72,8 @@ GLuint create_shader() {
   ";
   glShaderSource(fshader, 1, &fragment_shader, 0);
   glCompileShader(fshader);
-  error_check_shader(fshader, "fragment");
+  shader_error_check(fshader, "fragment shader", glGetShaderInfoLog,
+                     glGetShaderiv, GL_COMPILE_STATUS);
 
   // Create a program that stitches the two shader stages together.
   GLuint shader_program = glCreateProgram();
@@ -85,7 +84,8 @@ GLuint create_shader() {
 
   // Link the program so it's ready to apply during drawing.
   glLinkProgram(shader_program);
-  error_check_program(shader_program);
+  shader_error_check(shader_program, "program", glGetProgramInfoLog,
+                     glGetProgramiv, GL_LINK_STATUS);
   return shader_program;
 }
 
