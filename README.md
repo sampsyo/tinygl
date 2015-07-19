@@ -20,7 +20,7 @@ and enjoy the lovely colors.
 Why?
 ----
 
-The Web is chock-full of inconsistent nonsense about graphics programming. The overwhelming majority of text about OpenGL seems to be have been written for or by novices misguidedly trying to write their first video game from the ground up by copy n' paste from form posts. It doesn't help that the programming model is an unsafe mess, the domain is full of unfamiliar jargon, and the evolving standards mean that most example code is out of date.
+The Web is chock-full of inconsistent nonsense about graphics programming. The overwhelming majority of text about OpenGL seems to be have been written for or by novices misguidedly trying to write their first video game from the ground up by copy n' paste from forum posts. It doesn't help that the programming model is an unsafe mess, the domain is full of unfamiliar jargon, and the evolving standards mean that most example code is out of date.
 
 I wrote this small example so I could understand, with no ambiguity, precisely what goes on in a minimal OpenGL program. If you too are a greenhorn w.r.t. graphics programming, I hope the code and comments serve as an inroad to understanding that nest of ridiculousness.
 
