@@ -1,3 +1,8 @@
+// This is an example of a trivial OpenGL program with a pair of GLSL
+// shaders. It uses OpenGL 4.1 and [GLFW][] 3.
+//
+// [glfw]: http://www.glfw.org
+
 #define GLFW_INCLUDE_GLCOREARB
 #include <GLFW/glfw3.h>
 #include <stdlib.h>
@@ -10,9 +15,13 @@ const unsigned int NVERTICES = 13;
 const unsigned int NDIMENSIONS = 3;
 const unsigned int BUFSIZE = 1024;  // For error logs.
 
+// # The Shaders
+
+// ## Shader Error Checker
 // Check for errors when compiling or linking the shader program. We need this
 // 3 times: compiling the vertex shader, compiling the fragment (pixel)
-// shader, and linking the two together into a complete OpenGL "program".
+// shader, and linking the two together into a complete OpenGL "program."
+
 typedef void (*GetLogFunc)(GLuint, GLsizei, GLsizei *, GLchar *);
 typedef void (*GetParamFunc)(GLuint, GLenum, GLint *);
 void shader_error_check(GLuint object, const char *kind,
@@ -33,9 +42,12 @@ void shader_error_check(GLuint object, const char *kind,
     exit(1);
 }
 
-// Compile and link the GLSL shader source.
+// Now we compile and link the GLSL shader source.
 GLuint create_shader() {
-  // The vertex shader.
+  // ## Vertex Shader
+  // This is the program that runs on the GPU for every vertex of the shape
+  // we want to draw.
+
   GLuint vshader = glCreateShader(GL_VERTEX_SHADER);
   const char *vertex_shader =
     // Shader programs need to specify the version of the language they're
@@ -63,12 +75,19 @@ GLuint create_shader() {
     "  gl_Position = position;\n"
     "}\n"
   ;
+
+  // Compile the vertex shader.
   glShaderSource(vshader, 1, &vertex_shader, 0);
   glCompileShader(vshader);
   shader_error_check(vshader, "vertex shader", glGetShaderInfoLog,
                      glGetShaderiv, GL_COMPILE_STATUS);
 
-  // The fragment (pixel) shader.
+  // ## Fragment (Pixel) Shader
+  // This shader program runs per pixel in the rendered shape. The fragment
+  // shader is invoked many times *per* vertex shader. The vertex shader
+  // program can communicate with the fragment shader to "fan out" data from
+  // one stage to the next.
+
   GLuint fshader = glCreateShader(GL_FRAGMENT_SHADER);
   const char *fragment_shader =
     "#version 150\n"
@@ -96,11 +115,14 @@ GLuint create_shader() {
     "               1.);\n"
     "}\n"
   ;
+
+  // Compile the fragment shader.
   glShaderSource(fshader, 1, &fragment_shader, 0);
   glCompileShader(fshader);
   shader_error_check(fshader, "fragment shader", glGetShaderInfoLog,
                      glGetShaderiv, GL_COMPILE_STATUS);
 
+  // ## Shader Program
   // Create a program that stitches the two shader stages together.
   GLuint shader_program = glCreateProgram();
   glAttachShader(shader_program, vshader);
@@ -115,6 +137,8 @@ GLuint create_shader() {
   return shader_program;
 }
 
+// # Draw Stuff
+
 // Set the vertex positions of our shape according to the current time step.
 // We call this inside the draw loop to make the shape animate.
 void update_vertices(float *points, float t) {
@@ -127,6 +151,7 @@ void update_vertices(float *points, float t) {
 }
 
 int main(int argc, char **argv) {
+  // ## Setup
   // Set up the OpenGL context and the GLFW window that contains it. We'll
   // request a reasonably modern version of OpenGL, >= 4.1.
   glfwInit();
@@ -141,29 +166,41 @@ int main(int argc, char **argv) {
   // Which OpenGL version did we actually get?
   printf("OpenGL version %s\n", glGetString(GL_VERSION));
 
+  // ## Shaders and Shader Variables
+
   // Compile the shader program.
   GLuint program = create_shader();
 
   // To communicate with the shader program, we need to get the "locations"
   // (just IDs, really) of the shader-language variables based on their names.
   // We will use these IDs to send data to the shader inside the draw loop.
-  // Variable `phase`, for the fragment shader:
+
+  // First, the variable `phase`, for the fragment shader.
   GLuint loc_phase = glGetUniformLocation(program, "phase");
   assert(loc_phase != -1 && "could not find `phase` variable");
-  // Variable `position`, for the vertex shader:
+
+  // Then, the variable `position`, for the vertex shader.
   GLuint loc_position = glGetAttribLocation(program, "position");
   assert(loc_position != -1 && "could not find `position` variable");
+
+  // ## Vertex Position Buffer
+  // We next need to set up a buffer to hold the positions of the vertices in
+  // the shape we want to draw. We actually need *two* regions of memory: one
+  // on the CPU (just an ordinary `float[]`) and one on the GPU. The GPU-side
+  // one is called a Vertex Buffer Object (VBO) and it is wrapped in a
+  // structure called a Vertex Array Object (VAO) for communication between
+  // the CPU and GPU.
 
   // An array for the vertices of the shape we will to draw. We need 3
   // coordinates per point for a 3-dimensional space.
   float points[NVERTICES * NDIMENSIONS];
 
-  // Create an OpenGL "Vertex Array Object" (VAO), which contains a bundle of
+  // Create an OpenGL Vertex Array Object (VAO), which contains a bundle of
   // state to be passed with one draw call to the vertex shader.
   GLuint array;
   glGenVertexArrays(1, &array);
 
-  // Also create a "Vertex Buffer Object" (VBO), which (as the name implies)
+  // Also create a Vertex Buffer Object (VBO), which (as the name implies)
   // holds the actual *data* to be passed to the vertex shader. A VAO can have
   // multiple VBOs, but we just use one here (for the position).
   GLuint buffer;
@@ -196,44 +233,59 @@ int main(int argc, char **argv) {
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
 
+  // ## Draw Loop
+
   // Initialize the time to zero. We'll update it on every trip
   // through the loop.
   float t = 0;
 
-  // The main draw loop. (Terminates when the user closes the window.)
+  // The main draw loop terminates when the user closes the window.
   while (!glfwWindowShouldClose(window)) {
-    // `phase = sin(4 * t)`
+    // Poll for user input.
+    glfwPollEvents();
+
+    // ### Update Phase Variable
+
     // Assign to a shader "uniform" variable. A "uniform" is a value passed
     // from the CPU to the GPU that is the same for all invocations (i.e., all
     // vertices).
+    // Morally: `phase = sin(4 * t);`
     glUniform1f(loc_phase, sin(4 * t));
+
+    // ### Update Vertex Positions
 
     // Position the shape by updating the `points` array.
     update_vertices(points, t);
 
-    // `position = points`
     // Set the contents of the `position` vertex list. This is a bit more
     // complicated than the uniform above: we have to "bind" the buffer first
     // so we can manipulate it.
+    // Morally: `position = points;`
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
       // Copy the contents of our CPU-side `points` to the bound GPU buffer.
       glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(points), points);
     glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
 
-    // Actually draw something!
-    glClear(GL_COLOR_BUFFER_BIT);  // Clear the frame so we can draw to it.
-    glUseProgram(program);  // Use our shader program for the next draw call.
-    glBindVertexArray(array);  // Use the VAO to communicate with the shaders.
-      glDrawArrays(GL_TRIANGLE_FAN, 0, NVERTICES);  // Draw!
-    glBindVertexArray(0);  // Unbind.
-
-    // Display the frame and get window events.
-    glfwSwapBuffers(window);
-    glfwPollEvents();
-
     // Advance the time counter for the next frame.
     t += 0.01;
+
+    // ### Draw
+    // Actually draw something!
+
+    // Clear the frame so we can draw to it.
+    glClear(GL_COLOR_BUFFER_BIT);
+    // Use our shader program for the next draw call.
+    glUseProgram(program);
+    // Use the VAO to communicate with the shaders.
+    glBindVertexArray(array);
+      // Draw!
+      glDrawArrays(GL_TRIANGLE_FAN, 0, NVERTICES);
+    glBindVertexArray(0);  // Unbind.
+    // Display the frame to the screen.
+    glfwSwapBuffers(window);
   }
+
+  // ## Teardown
 
   // Tear down the windowing system and deallocate the OpenGL resources.
   glfwDestroyWindow(window);
