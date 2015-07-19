@@ -2,15 +2,16 @@ TARGET := tinygl
 SOURCE := tinygl.c
 CFLAGS := -I/usr/local/include -g -std=gnu11
 LIBFLAGS := -L/usr/local/lib -lglfw3 -framework OpenGL
-DOCS := $(SOURCE:%.c=%.html)
+DOCDIR := docs
 
 $(TARGET): $(SOURCE)
 	$(CC) $(CFLAGS) $(LIBFLAGS) -o $@ $^
 
 .PHONY: clean
 clean:
-	rm -f $(TARGET) $(DOCS)
+	rm -f $(TARGET)
+	rm -rf $(DOCDIR)
 
 # The documentation.
-$(DOCS): $(SOURCE)
+$(DOCDIR): $(SOURCE)
 	docco $^
