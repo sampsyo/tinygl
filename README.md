@@ -39,7 +39,10 @@ It does not (yet) demonstrate:
 * Multiple vertex attributes (currently, the only attribute is position).
 * Using uniforms for view and projection transforms (a common pattern).
 
+Because I am totally clueless, I probably got some stuff wrong; please [let me know][newbug] if you see any mistakes.
+
 [GLSL]: https://www.opengl.org/documentation/glsl/
+[newbug]: https://github.com/sampsyo/tinygl/issues/new
 
 
 Credits
