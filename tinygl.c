@@ -115,7 +115,18 @@ GLuint create_shader() {
   return shader_program;
 }
 
-int main(int argc, char **argv){
+// Set the vertex positions of our shape according to the current time step.
+// We call this inside the draw loop to make the shape animate.
+void update_vertices(float *points, float t) {
+  for (int i = 0; i < NVERTICES; ++i) {
+    float *coords = points + NDIMENSIONS * i;
+    coords[0] = cos(360. / (NVERTICES - 1) * PI / 180. * i + t);
+    coords[1] = sin(360. / (NVERTICES - 1) * PI / 180. * i + t);
+    coords[2] = 0.;
+  }
+}
+
+int main(int argc, char **argv) {
   // Set up the OpenGL context and the GLFW window that contains it. We'll
   // request a reasonably modern version of OpenGL, >= 4.1.
   glfwInit();
@@ -191,19 +202,8 @@ int main(int argc, char **argv){
 
   // The main draw loop. (Terminates when the user closes the window.)
   while (!glfwWindowShouldClose(window)) {
-    // Position (rotate) the shape by updating its vertices.
-    for (int i = 0; i < NVERTICES; ++i) {
-      float *coords = points + NDIMENSIONS * i;
-      coords[0] = cos(360. / (NVERTICES - 1) * PI / 180. * i + t);
-      coords[1] = sin(360. / (NVERTICES - 1) * PI / 180. * i + t);
-      coords[2] = 0.;
-    }
-
-    // Clear the frame so we can start drawing to it.
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    // Use our shader program to render the shape.
-    glUseProgram(program);
+    // Position the shape.
+    update_vertices(points, t);
 
     // `phase = sin(4 * t)`
     // Assign to a shader "uniform" variable. A "uniform" is a value passed
@@ -220,10 +220,11 @@ int main(int argc, char **argv){
       glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(points), points);
     glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
 
-    // Actually draw something! "Binding" the vertex array object tells OpenGL
-    // to use it to communicate with the shaders for this draw call.
-    glBindVertexArray(array);
-      glDrawArrays(GL_TRIANGLE_FAN, 0, NVERTICES);
+    // Actually draw something!
+    glClear(GL_COLOR_BUFFER_BIT);  // Clear the frame so we can draw to it.
+    glUseProgram(program);  // Use our shader program for the next draw call.
+    glBindVertexArray(array);  // Use the VAO to communicate with the shaders.
+      glDrawArrays(GL_TRIANGLE_FAN, 0, NVERTICES);  // Draw!
     glBindVertexArray(0);  // Unbind.
 
     // Display the frame and get window events.
