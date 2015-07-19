@@ -147,18 +147,38 @@ int main(int argc, char **argv){
   // coordinates per point for a 3-dimensional space.
   float points[NVERTICES * NDIMENSIONS];
 
-  GLuint vao_id, vbo_id;
-  glGenVertexArrays(1, &vao_id);
-  glBindVertexArray(vao_id);
+  // Create an OpenGL "Vertex Array Object" (VAO), which contains a bundle of
+  // state to be passed with one draw call to the vertex shader.
+  GLuint array;
+  glGenVertexArrays(1, &array);
 
-  glGenBuffers(1, &vbo_id);
-  glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(points), NULL, GL_DYNAMIC_DRAW);
+  // Also create a "Vertex Buffer Object" (VBO), which (as the name implies)
+  // holds the actual *data* to be passed to the vertex shader. A VAO can have
+  // multiple VBOs, but we just use one here (for the position).
+  GLuint buffer;
+  glGenBuffers(1, &buffer);
+
+  // To set up the buffer, we "bind" to the "target" GL_ARRAY_BUFFER, which
+  // lets us use other calls to manipulate it.
+  glBindBuffer(GL_ARRAY_BUFFER, buffer);
+
+  // Allocate space for the buffer and fill it with zeros.
   // WTF is DYNAMIC_DRAW?
+  glBufferData(GL_ARRAY_BUFFER, sizeof(points), NULL, GL_DYNAMIC_DRAW);
 
-  glVertexAttribPointer(loc_position, NDIMENSIONS, GL_FLOAT, GL_FALSE, 0,
-                        NULL);
+  glBindVertexArray(array);
+  // Associate the `position` variable with our buffer object in the array
+  // object. This call *implictly* refers to the currently-bound array object
+  // and buffer object, and *explicitly* refers to the `position` variable in
+  // the shader program via its "location". (A "vertex attribute" is just a
+  // fancy name for an `in`-annotated variable in a vertex shader.)
+  glVertexAttribPointer(loc_position, NDIMENSIONS, GL_FLOAT, GL_FALSE, 0, 0);
+  // For some unknowable reason, you also have to "enable" the variable
+  // ("attribute") in the array object to make it actually work.
   glEnableVertexAttribArray(loc_position);
+  glBindVertexArray(0);
+
+  glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
 
   // Initialize the time to zero. We'll update it on every trip
   // through the loop.
@@ -186,15 +206,19 @@ int main(int argc, char **argv){
     // phase = sin(4 * t)
     glUniform1f(loc_phase, sin(4 * t));
 
-    // Now draw the shape using the shader.
-    // glEnableClientState(GL_VERTEX_ARRAY);
-    // WTF update the data in the points array?
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_DYNAMIC_DRAW);
+    // Similarly, we now need to set the contents of the `position` vertex
+    // list. This is quite a bit more complicated.
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);  // Set the current buffer to ours.
+    // Use the binding to copy the contents of our CPU-side `points` to the
+    // activated GPU buffer.
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(points), points);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind GL_ARRAY_BUFFER.
 
-    glBindVertexArray(vao_id);
+    // Actually draw something! "Binding" the vertex array object tells OpenGL
+    // to use it to communicate with the shaders for this draw call.
+    glBindVertexArray(array);
     glDrawArrays(GL_TRIANGLE_FAN, 0, NVERTICES);
-    // glDisableClientState(GL_VERTEX_ARRAY);
+    glBindVertexArray(0);  // Unbind.
 
     // Display the frame and get window events.
     glfwSwapBuffers(window);
@@ -207,8 +231,8 @@ int main(int argc, char **argv){
   // Tear down the windowing system and deallocate the OpenGL resources.
   glfwDestroyWindow(window);
   glDeleteProgram(program);
-  glDeleteBuffers(1, &vbo_id);
-  glDeleteVertexArrays(1, &vao_id);
+  glDeleteBuffers(1, &buffer);
+  glDeleteVertexArrays(1, &array);
   glfwTerminate();
   return 0;
 }
