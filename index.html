@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>tinygl.c</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>tinygl.c</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              <p>This is an example of a trivial OpenGL program with a pair of GLSL
+shaders. It uses OpenGL 4.1 and <a href="http://www.glfw.org">GLFW</a> 3.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-preprocessor">#<span class="hljs-keyword">define</span> GLFW_INCLUDE_GLCOREARB</span>
+<span class="hljs-preprocessor">#<span class="hljs-keyword">include</span> &lt;GLFW/glfw3.h&gt;</span>
+<span class="hljs-preprocessor">#<span class="hljs-keyword">include</span> &lt;stdlib.h&gt;</span>
+<span class="hljs-preprocessor">#<span class="hljs-keyword">include</span> &lt;math.h&gt;</span>
+<span class="hljs-preprocessor">#<span class="hljs-keyword">include</span> &lt;stdio.h&gt;</span>
+<span class="hljs-preprocessor">#<span class="hljs-keyword">include</span> &lt;assert.h&gt;</span>
+
+<span class="hljs-keyword">const</span> <span class="hljs-keyword">double</span> PI = <span class="hljs-number">3.141592</span>;
+<span class="hljs-keyword">const</span> <span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">int</span> NVERTICES = <span class="hljs-number">13</span>;
+<span class="hljs-keyword">const</span> <span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">int</span> NDIMENSIONS = <span class="hljs-number">3</span>;
+<span class="hljs-keyword">const</span> <span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">int</span> BUFSIZE = <span class="hljs-number">1024</span>;  <span class="hljs-comment">// For error logs.</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <h1 id="the-shaders">The Shaders</h1>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <h2 id="shader-error-checker">Shader Error Checker</h2>
+<p>Check for errors when compiling or linking the shader program. We need this
+3 times: compiling the vertex shader, compiling the fragment (pixel)
+shader, and linking the two together into a complete OpenGL “program.”</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-function"><span class="hljs-keyword">typedef</span> <span class="hljs-title">void</span> <span class="hljs-params">(*GetLogFunc)</span><span class="hljs-params">(GLuint, GLsizei, GLsizei *, GLchar *)</span></span>;
+<span class="hljs-function"><span class="hljs-keyword">typedef</span> <span class="hljs-title">void</span> <span class="hljs-params">(*GetParamFunc)</span><span class="hljs-params">(GLuint, GLenum, GLint *)</span></span>;
+<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">shader_error_check</span><span class="hljs-params">(GLuint object, <span class="hljs-keyword">const</span> <span class="hljs-keyword">char</span> *kind,
+        GetLogFunc getLog, GetParamFunc getParam, GLenum param)</span> </span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>Get the error/warning log using either <code>glGetShaderInfoLog</code> or
+<code>glGetProgramInfoLog</code> (as <code>getLog</code>).</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  GLchar <span class="hljs-built_in">log</span>[BUFSIZE];
+  GLsizei length;
+  getLog(object, BUFSIZE, &amp;length, <span class="hljs-built_in">log</span>);
+  <span class="hljs-keyword">if</span> (length)
+    <span class="hljs-built_in">fprintf</span>(stderr, <span class="hljs-string">"%s log:\n%s"</span>, kind, <span class="hljs-built_in">log</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>Get the status flag using either <code>glGetShaderiv</code> with the
+<code>GL_COMPILE_STATUS</code> parameter,  or <code>glGetProgramiv</code> with <code>GL_LINK_STATUS</code>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  GLint status;
+  getParam(object, param, &amp;status);
+  <span class="hljs-keyword">if</span> (status == GL_FALSE)
+    <span class="hljs-built_in">exit</span>(<span class="hljs-number">1</span>);
+}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>Now we compile and link the GLSL shader source.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-function">GLuint <span class="hljs-title">create_shader</span><span class="hljs-params">()</span> </span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <h2 id="vertex-shader">Vertex Shader</h2>
+<p>This is the program that runs on the GPU for every vertex of the shape
+we want to draw.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+  GLuint vshader = glCreateShader(GL_VERTEX_SHADER);
+  <span class="hljs-keyword">const</span> <span class="hljs-keyword">char</span> *vertex_shader =</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>Shader programs need to specify the version of the language they’re
+targeting in the source code. “410” corresponds to OpenGL 4.1, which is
+from 2010.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-string">"#version 410\n"</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>The <code>in</code> annotation indicates that this is an input from the CPU to the
+vertex shader. We provide this below via a buffer. Confusingly, this is
+a <code>vec4</code> while the data we provide is only 3-dimensional; there is a
+4th “W” dimension that has something to do with clipping.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-string">"in vec4 position;\n"</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>The <code>out</code> annotation here indicates that this variable will be used to
+communicate <em>from</em> this vertex shader <em>to</em> the fragment shader.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-string">"out vec4 myPos;\n"</span>
+
+    <span class="hljs-string">"void main() {\n"</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>Send output to the fragment shader.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-string">"  myPos = position;\n"</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <p>Assigning to the special variable <code>gl_Position</code> (a member of the
+built-in “named block” <code>gl_PerVertex</code>) constitutes the <em>output</em> of a
+vertex shader.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-string">"  gl_Position = position;\n"</span>
+    <span class="hljs-string">"}\n"</span>
+  ;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p>Compile the vertex shader.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  glShaderSource(vshader, <span class="hljs-number">1</span>, &amp;vertex_shader, <span class="hljs-number">0</span>);
+  glCompileShader(vshader);
+  shader_error_check(vshader, <span class="hljs-string">"vertex shader"</span>, glGetShaderInfoLog,
+                     glGetShaderiv, GL_COMPILE_STATUS);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+              <h2 id="fragment-pixel-shader">Fragment (Pixel) Shader</h2>
+<p>This shader program runs per pixel in the rendered shape. The fragment
+shader is invoked many times <em>per</em> vertex shader. The vertex shader
+program can communicate with the fragment shader to “fan out” data from
+one stage to the next.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+  GLuint fshader = glCreateShader(GL_FRAGMENT_SHADER);
+  <span class="hljs-keyword">const</span> <span class="hljs-keyword">char</span> *fragment_shader =
+    <span class="hljs-string">"#version 150\n"</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-15">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+              <p>The <code>uniform</code> annotation indicates an input from the CPU to the
+fragment shader that is “global” for the invocation; it is not
+per-vertex or per-pixel. We provide this value below using a
+<code>glUniform*</code> call.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-string">"uniform float phase;\n"</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-16">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-16">&#182;</a>
+              </div>
+              <p>The <code>in</code> annotation here matches with the <code>out</code> annotation on the
+variable of the same name in the vertex shader.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-string">"in vec4 myPos;\n"</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-17">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-17">&#182;</a>
+              </div>
+              <p>The <code>out</code>-annotated variable declared for a fragment shader is
+<em>implicitly</em> the color of the pixel.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-string">"out vec4 color;\n"</span>
+
+    <span class="hljs-string">"void main() {\n"</span>
+    <span class="hljs-string">"  float r2 = (myPos.x + 1.) * (myPos.x + 1.) +\n"</span>
+    <span class="hljs-string">"             (myPos.y + 1.) * (myPos.y + 1.);\n"</span>
+    <span class="hljs-string">"  color = vec4((myPos.x + 1.) / r2,\n"</span>
+    <span class="hljs-string">"               (myPos.y + 1.) / r2,\n"</span>
+    <span class="hljs-string">"               phase,\n"</span>
+    <span class="hljs-string">"               1.);\n"</span>
+    <span class="hljs-string">"}\n"</span>
+  ;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-18">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-18">&#182;</a>
+              </div>
+              <p>Compile the fragment shader.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  glShaderSource(fshader, <span class="hljs-number">1</span>, &amp;fragment_shader, <span class="hljs-number">0</span>);
+  glCompileShader(fshader);
+  shader_error_check(fshader, <span class="hljs-string">"fragment shader"</span>, glGetShaderInfoLog,
+                     glGetShaderiv, GL_COMPILE_STATUS);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-19">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-19">&#182;</a>
+              </div>
+              <h2 id="shader-program">Shader Program</h2>
+<p>Create a program that stitches the two shader stages together.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  GLuint shader_program = glCreateProgram();
+  glAttachShader(shader_program, vshader);
+  glDeleteShader(vshader);
+  glAttachShader(shader_program, fshader);
+  glDeleteShader(fshader);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-20">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-20">&#182;</a>
+              </div>
+              <p>Link the program so it’s ready to apply during drawing.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  glLinkProgram(shader_program);
+  shader_error_check(shader_program, <span class="hljs-string">"program"</span>, glGetProgramInfoLog,
+                     glGetProgramiv, GL_LINK_STATUS);
+  <span class="hljs-keyword">return</span> shader_program;
+}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-21">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-21">&#182;</a>
+              </div>
+              <h1 id="draw-stuff">Draw Stuff</h1>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-22">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-22">&#182;</a>
+              </div>
+              <p>Set the vertex positions of our shape according to the current time step.
+We call this inside the draw loop to make the shape animate.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">update_vertices</span><span class="hljs-params">(<span class="hljs-keyword">float</span> *points, <span class="hljs-keyword">float</span> t)</span> </span>{
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>; i &lt; NVERTICES; ++i) {
+    <span class="hljs-keyword">float</span> *coords = points + NDIMENSIONS * i;
+    coords[<span class="hljs-number">0</span>] = <span class="hljs-built_in">cos</span>(<span class="hljs-number">360.</span> / (NVERTICES - <span class="hljs-number">1</span>) * PI / <span class="hljs-number">180.</span> * i + t);
+    coords[<span class="hljs-number">1</span>] = <span class="hljs-built_in">sin</span>(<span class="hljs-number">360.</span> / (NVERTICES - <span class="hljs-number">1</span>) * PI / <span class="hljs-number">180.</span> * i + t);
+    coords[<span class="hljs-number">2</span>] = <span class="hljs-number">0.</span>;
+  }
+}
+
+<span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">main</span><span class="hljs-params">(<span class="hljs-keyword">int</span> argc, <span class="hljs-keyword">char</span> **argv)</span> </span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-23">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-23">&#182;</a>
+              </div>
+              <h2 id="setup">Setup</h2>
+<p>Set up the OpenGL context and the GLFW window that contains it. We’ll
+request a reasonably modern version of OpenGL, &gt;= 4.1.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  glfwInit();
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, <span class="hljs-number">4</span>);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, <span class="hljs-number">1</span>);
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  GLFWwindow* window = glfwCreateWindow(<span class="hljs-number">512</span>, <span class="hljs-number">512</span>, <span class="hljs-string">"Look at Me!"</span>, NULL, NULL);
+  glfwMakeContextCurrent(window);
+  glfwSwapInterval(<span class="hljs-number">1</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-24">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-24">&#182;</a>
+              </div>
+              <p>Which OpenGL version did we actually get?</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-built_in">printf</span>(<span class="hljs-string">"OpenGL version %s\n"</span>, glGetString(GL_VERSION));</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-25">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-25">&#182;</a>
+              </div>
+              <h2 id="shaders-and-shader-variables">Shaders and Shader Variables</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-26">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-26">&#182;</a>
+              </div>
+              <p>Compile the shader program.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  GLuint program = create_shader();</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-27">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-27">&#182;</a>
+              </div>
+              <p>To communicate with the shader program, we need to get the “locations”
+(just IDs, really) of the shader-language variables based on their names.
+We will use these IDs to send data to the shader inside the draw loop.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-28">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-28">&#182;</a>
+              </div>
+              <p>First, the variable <code>phase</code>, for the fragment shader.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  GLuint loc_phase = glGetUniformLocation(program, <span class="hljs-string">"phase"</span>);
+  assert(loc_phase != -<span class="hljs-number">1</span> &amp;&amp; <span class="hljs-string">"could not find `phase` variable"</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-29">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-29">&#182;</a>
+              </div>
+              <p>Then, the variable <code>position</code>, for the vertex shader.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  GLuint loc_position = glGetAttribLocation(program, <span class="hljs-string">"position"</span>);
+  assert(loc_position != -<span class="hljs-number">1</span> &amp;&amp; <span class="hljs-string">"could not find `position` variable"</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-30">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-30">&#182;</a>
+              </div>
+              <h2 id="vertex-position-buffer">Vertex Position Buffer</h2>
+<p>We next need to set up a buffer to hold the positions of the vertices in
+the shape we want to draw. We actually need <em>two</em> regions of memory: one
+on the CPU (just an ordinary <code>float[]</code>) and one on the GPU. The GPU-side
+one is called a Vertex Buffer Object (VBO) and it is wrapped in a
+structure called a Vertex Array Object (VAO) for communication between
+the CPU and GPU.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-31">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-31">&#182;</a>
+              </div>
+              <p>An array for the vertices of the shape we will to draw. We need 3
+coordinates per point for a 3-dimensional space.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">float</span> points[NVERTICES * NDIMENSIONS];</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-32">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-32">&#182;</a>
+              </div>
+              <p>Create an OpenGL Vertex Array Object (VAO), which contains a bundle of
+state to be passed with one draw call to the vertex shader.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  GLuint <span class="hljs-built_in">array</span>;
+  glGenVertexArrays(<span class="hljs-number">1</span>, &amp;<span class="hljs-built_in">array</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-33">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-33">&#182;</a>
+              </div>
+              <p>Also create a Vertex Buffer Object (VBO), which (as the name implies)
+holds the actual <em>data</em> to be passed to the vertex shader. A VAO can have
+multiple VBOs, but we just use one here (for the position).</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  GLuint buffer;
+  glGenBuffers(<span class="hljs-number">1</span>, &amp;buffer);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-34">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-34">&#182;</a>
+              </div>
+              <p>To set up the buffer, we “bind” to the “target” GL_ARRAY_BUFFER, which
+lets us use other calls to manipulate it.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  glBindBuffer(GL_ARRAY_BUFFER, buffer);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-35">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-35">&#182;</a>
+              </div>
+              <p>Allocate space for the buffer and fill it with zeros. (GL_DYNAMIC_DRAW
+indicates that we may change the contents of this buffer later. This is
+just a performance hint; nothing will break if you change this to
+GL_STATIC_DRAW.)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    glBufferData(GL_ARRAY_BUFFER, <span class="hljs-keyword">sizeof</span>(points), NULL, GL_DYNAMIC_DRAW);
+
+    glBindVertexArray(<span class="hljs-built_in">array</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-36">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-36">&#182;</a>
+              </div>
+              <p>Associate the <code>position</code> variable with our buffer object in the array
+object. This call <em>implictly</em> refers to the currently-bound array
+object and buffer object, and <em>explicitly</em> refers to the <code>position</code>
+variable in the shader program via its “location”. (A “vertex
+attribute” is just a fancy name for an <code>in</code>-annotated variable in a
+vertex shader.)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      glVertexAttribPointer(loc_position, NDIMENSIONS, GL_FLOAT,
+                            GL_FALSE, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-37">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-37">&#182;</a>
+              </div>
+              <p>For some unknowable reason, you also have to “enable” the variable
+(“attribute”) in the array object to make it actually work.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      glEnableVertexAttribArray(loc_position);
+    glBindVertexArray(<span class="hljs-number">0</span>);  <span class="hljs-comment">// Unbind.</span>
+
+  glBindBuffer(GL_ARRAY_BUFFER, <span class="hljs-number">0</span>);  <span class="hljs-comment">// Unbind.</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-38">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-38">&#182;</a>
+              </div>
+              <h2 id="draw-loop">Draw Loop</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-39">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-39">&#182;</a>
+              </div>
+              <p>Initialize the time to zero. We’ll update it on every trip
+through the loop.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">float</span> t = <span class="hljs-number">0</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-40">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-40">&#182;</a>
+              </div>
+              <p>The main draw loop terminates when the user closes the window.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">while</span> (!glfwWindowShouldClose(window)) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-41">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-41">&#182;</a>
+              </div>
+              <p>Poll for user input.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    glfwPollEvents();</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-42">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-42">&#182;</a>
+              </div>
+              <h3 id="update-phase-variable">Update Phase Variable</h3>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-43">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-43">&#182;</a>
+              </div>
+              <p>Assign to a shader “uniform” variable. A “uniform” is a value passed
+from the CPU to the GPU that is the same for all invocations (i.e., all
+vertices).
+Morally: <code>phase = sin(4 * t);</code></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    glUniform1f(loc_phase, <span class="hljs-built_in">sin</span>(<span class="hljs-number">4</span> * t));</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-44">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-44">&#182;</a>
+              </div>
+              <h3 id="update-vertex-positions">Update Vertex Positions</h3>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-45">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-45">&#182;</a>
+              </div>
+              <p>Position the shape by updating the <code>points</code> array.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    update_vertices(points, t);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-46">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-46">&#182;</a>
+              </div>
+              <p>Set the contents of the <code>position</code> vertex list. This is a bit more
+complicated than the uniform above: we have to “bind” the buffer first
+so we can manipulate it.
+Morally: <code>position = points;</code></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    glBindBuffer(GL_ARRAY_BUFFER, buffer);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-47">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-47">&#182;</a>
+              </div>
+              <p>Copy the contents of our CPU-side <code>points</code> to the bound GPU buffer.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      glBufferSubData(GL_ARRAY_BUFFER, <span class="hljs-number">0</span>, <span class="hljs-keyword">sizeof</span>(points), points);
+    glBindBuffer(GL_ARRAY_BUFFER, <span class="hljs-number">0</span>);  <span class="hljs-comment">// Unbind.</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-48">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-48">&#182;</a>
+              </div>
+              <p>Advance the time counter for the next frame.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    t += <span class="hljs-number">0.01</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-49">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-49">&#182;</a>
+              </div>
+              <h3 id="draw">Draw</h3>
+<p>Actually draw something!</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-50">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-50">&#182;</a>
+              </div>
+              <p>Clear the frame so we can draw to it.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    glClear(GL_COLOR_BUFFER_BIT);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-51">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-51">&#182;</a>
+              </div>
+              <p>Use our shader program for the next draw call.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    glUseProgram(program);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-52">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-52">&#182;</a>
+              </div>
+              <p>Use the VAO to communicate with the shaders.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    glBindVertexArray(<span class="hljs-built_in">array</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-53">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-53">&#182;</a>
+              </div>
+              <p>Draw!</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      glDrawArrays(GL_TRIANGLE_FAN, <span class="hljs-number">0</span>, NVERTICES);
+    glBindVertexArray(<span class="hljs-number">0</span>);  <span class="hljs-comment">// Unbind.</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-54">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-54">&#182;</a>
+              </div>
+              <p>Display the frame to the screen.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    glfwSwapBuffers(window);
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-55">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-55">&#182;</a>
+              </div>
+              <h2 id="teardown">Teardown</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-56">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-56">&#182;</a>
+              </div>
+              <p>Tear down the windowing system and deallocate the OpenGL resources.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  glfwDestroyWindow(window);
+  glDeleteProgram(program);
+  glDeleteBuffers(<span class="hljs-number">1</span>, &amp;buffer);
+  glDeleteVertexArrays(<span class="hljs-number">1</span>, &amp;<span class="hljs-built_in">array</span>);
+  glfwTerminate();
+  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+}</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>
