@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
+#include <assert.h>
 
 const double PI = 3.141592;
 const unsigned int NVERTICES = 13;
@@ -132,18 +133,19 @@ int main(int argc, char **argv){
   // Compile the shader program.
   GLuint program = create_shader();
 
-  // Get the "location" (just an ID) of a "uniform" variable in the shader
-  // program. We will use this to communicate to the shader inside the draw
-  // loop.
+  // To communicate with the shader program, we need to get the "locations"
+  // (just IDs, really) of the shader-language variables based on their names.
+  // We will use these IDs to send data to the shader inside the draw loop.
+  // Variable `phase`, for the fragment shader:
   GLuint loc_phase = glGetUniformLocation(program, "phase");
   assert(loc_phase != -1 && "could not find `phase` variable");
+  // Variable `position`, for the vertex shader:
+  GLuint loc_position = glGetAttribLocation(program, "position");
+  assert(loc_position != -1 && "could not find `position` variable");
 
   // An array for the vertices of the shape we will to draw. We need 3
   // coordinates per point for a 3-dimensional space.
   float points[NVERTICES * NDIMENSIONS];
-
-  GLuint loc_position = glGetAttribLocation(program, "position");
-  assert(loc_position != -1 && "could not find `position` variable");
 
   GLuint vao_id, vbo_id;
   glGenVertexArrays(1, &vao_id);
@@ -202,10 +204,11 @@ int main(int argc, char **argv){
     t += 0.01;
   }
 
-  // WTF destroy VAO and VBO
-
-  // Teardown.
+  // Tear down the windowing system and deallocate the OpenGL resources.
   glfwDestroyWindow(window);
+  glDeleteProgram(program);
+  glDeleteBuffers(1, &vbo_id);
+  glDeleteVertexArrays(1, &vao_id);
   glfwTerminate();
   return 0;
 }
