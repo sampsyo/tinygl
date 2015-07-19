@@ -37,8 +37,10 @@ GLuint create_shader() {
   // The vertex shader.
   GLuint vshader = glCreateShader(GL_VERTEX_SHADER);
   const char *vertex_shader =
-    "#version 150\n"
-    // WTF EXPLAIN BROKEN VERSIONING SCHEME
+    // Shader programs need to specify the version of the language they're
+    // targeting in the source code. "410" corresponds to OpenGL 4.1, which is
+    // from 2010.
+    "#version 410\n"
     // WTF WHY VEC4
     "in vec4 position;\n"
     "out vec4 myPos;\n"
@@ -91,10 +93,10 @@ GLuint create_shader() {
 
 int main(int argc, char **argv){
   // Set up the OpenGL context and the GLFW window that contains it. We'll
-  // request a reasonably modern version of OpenGL, >= 3.2.
+  // request a reasonably modern version of OpenGL, >= 4.1.
   glfwInit();
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   GLFWwindow* window = glfwCreateWindow(512, 512, "Look at Me!", NULL, NULL);

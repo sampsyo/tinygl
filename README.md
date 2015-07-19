@@ -5,7 +5,7 @@ A minuscule OpenGL example with a GLSL shader. This is about as small as it can 
 
 It's a cleaned-up version of [`nothing.c`][nothing.c] from Akihiko Fujii's [`glfw_samples`][glfw_samples] repository. The license is MIT.
 
-The Makefile may need adaptation for your platform (I set it up for OS X). You will need OpenGL and [GLFW 3.x][glfw]. Then:
+The Makefile may need adaptation for your platform (I set it up for OS X). You will need OpenGL 4.1 (or later) and [GLFW 3.x][glfw]. Then:
 
     $ make
     $ ./tinygl
