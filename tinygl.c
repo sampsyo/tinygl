@@ -41,11 +41,24 @@ GLuint create_shader() {
     // targeting in the source code. "410" corresponds to OpenGL 4.1, which is
     // from 2010.
     "#version 410\n"
-    // WTF WHY VEC4
+
+    // The `in` annotation indicates that this is an input from the CPU to the
+    // vertex shader. We provide this below via a buffer. Confusingly, this is
+    // a `vec4` while the data we provide is only 3-dimensional; there is a
+    // 4th "W" dimension that has something to do with clipping.
     "in vec4 position;\n"
+
+    // The `out` annotation here indicates that this variable will be used to
+    // communicate *from* this vertex shader *to* the fragment shader.
     "out vec4 myPos;\n"
+
     "void main() {\n"
+    // Send output to the fragment shader.
     "  myPos = position;\n"
+
+    // Assigning to the special variable `gl_Position` (a member of the
+    // built-in "named block" `gl_PerVertex`) constitutes the *output* of a
+    // vertex shader.
     "  gl_Position = position;\n"
     "}\n"
   ;
@@ -58,11 +71,21 @@ GLuint create_shader() {
   GLuint fshader = glCreateShader(GL_FRAGMENT_SHADER);
   const char *fragment_shader =
     "#version 150\n"
+
+    // The `uniform` annotation indicates an input from the CPU to the
+    // fragment shader that is "global" for the invocation; it is not
+    // per-vertex or per-pixel. We provide this value below using a
+    // `glUniform*` call.
     "uniform float phase;\n"
+
+    // The `in` annotation here matches with the `out` annotation on the
+    // variable of the same name in the vertex shader.
     "in vec4 myPos;\n"
-    // The output variable declared for a fragment shader is *implicitly*
-    // the color of the pixel.
+
+    // The `out`-annotated variable declared for a fragment shader is
+    // *implicitly* the color of the pixel.
     "out vec4 color;\n"
+
     "void main() {\n"
     "  float r2 = (myPos.x + 1.) * (myPos.x + 1.) +\n"
     "             (myPos.y + 1.) * (myPos.y + 1.);\n"
@@ -113,13 +136,14 @@ int main(int argc, char **argv){
   // program. We will use this to communicate to the shader inside the draw
   // loop.
   GLuint loc_phase = glGetUniformLocation(program, "phase");
+  assert(loc_phase != -1 && "could not find `phase` variable");
 
   // An array for the vertices of the shape we will to draw. We need 3
   // coordinates per point for a 3-dimensional space.
   float points[NVERTICES * NDIMENSIONS];
 
   GLuint loc_position = glGetAttribLocation(program, "position");
-  // WTF check for error
+  assert(loc_position != -1 && "could not find `position` variable");
 
   GLuint vao_id, vbo_id;
   glGenVertexArrays(1, &vao_id);
