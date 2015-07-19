@@ -162,8 +162,10 @@ int main(int argc, char **argv){
   // lets us use other calls to manipulate it.
   glBindBuffer(GL_ARRAY_BUFFER, buffer);
 
-    // Allocate space for the buffer and fill it with zeros.
-    // WTF is DYNAMIC_DRAW?
+    // Allocate space for the buffer and fill it with zeros. (GL_DYNAMIC_DRAW
+    // indicates that we may change the contents of this buffer later. This is
+    // just a performance hint; nothing will break if you change this to
+    // GL_STATIC_DRAW.)
     glBufferData(GL_ARRAY_BUFFER, sizeof(points), NULL, GL_DYNAMIC_DRAW);
 
     glBindVertexArray(array);
