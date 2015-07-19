@@ -162,21 +162,24 @@ int main(int argc, char **argv){
   // lets us use other calls to manipulate it.
   glBindBuffer(GL_ARRAY_BUFFER, buffer);
 
-  // Allocate space for the buffer and fill it with zeros.
-  // WTF is DYNAMIC_DRAW?
-  glBufferData(GL_ARRAY_BUFFER, sizeof(points), NULL, GL_DYNAMIC_DRAW);
+    // Allocate space for the buffer and fill it with zeros.
+    // WTF is DYNAMIC_DRAW?
+    glBufferData(GL_ARRAY_BUFFER, sizeof(points), NULL, GL_DYNAMIC_DRAW);
 
-  glBindVertexArray(array);
-  // Associate the `position` variable with our buffer object in the array
-  // object. This call *implictly* refers to the currently-bound array object
-  // and buffer object, and *explicitly* refers to the `position` variable in
-  // the shader program via its "location". (A "vertex attribute" is just a
-  // fancy name for an `in`-annotated variable in a vertex shader.)
-  glVertexAttribPointer(loc_position, NDIMENSIONS, GL_FLOAT, GL_FALSE, 0, 0);
-  // For some unknowable reason, you also have to "enable" the variable
-  // ("attribute") in the array object to make it actually work.
-  glEnableVertexAttribArray(loc_position);
-  glBindVertexArray(0);
+    glBindVertexArray(array);
+      // Associate the `position` variable with our buffer object in the array
+      // object. This call *implictly* refers to the currently-bound array
+      // object and buffer object, and *explicitly* refers to the `position`
+      // variable in the shader program via its "location". (A "vertex
+      // attribute" is just a fancy name for an `in`-annotated variable in a
+      // vertex shader.)
+      glVertexAttribPointer(loc_position, NDIMENSIONS, GL_FLOAT,
+                            GL_FALSE, 0, 0);
+
+      // For some unknowable reason, you also have to "enable" the variable
+      // ("attribute") in the array object to make it actually work.
+      glEnableVertexAttribArray(loc_position);
+    glBindVertexArray(0);  // Unbind.
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
 
@@ -200,24 +203,25 @@ int main(int argc, char **argv){
     // Use our shader program to render the shape.
     glUseProgram(program);
 
+    // `phase = sin(4 * t)`
     // Assign to a shader "uniform" variable. A "uniform" is a value passed
     // from the CPU to the GPU that is the same for all invocations (i.e., all
-    // vertices). So this line essentially performs the assignment:
-    // phase = sin(4 * t)
+    // vertices).
     glUniform1f(loc_phase, sin(4 * t));
 
+    // `position = points`
     // Similarly, we now need to set the contents of the `position` vertex
-    // list. This is quite a bit more complicated.
-    glBindBuffer(GL_ARRAY_BUFFER, buffer);  // Set the current buffer to ours.
-    // Use the binding to copy the contents of our CPU-side `points` to the
-    // activated GPU buffer.
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(points), points);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind GL_ARRAY_BUFFER.
+    // list. This is a bit more complicated. We have to "bind" the buffer
+    // first so we can manipulate it.
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+      // Copy the contents of our CPU-side `points` to the bound GPU buffer.
+      glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(points), points);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);  // Unbind.
 
     // Actually draw something! "Binding" the vertex array object tells OpenGL
     // to use it to communicate with the shaders for this draw call.
     glBindVertexArray(array);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, NVERTICES);
+      glDrawArrays(GL_TRIANGLE_FAN, 0, NVERTICES);
     glBindVertexArray(0);  // Unbind.
 
     // Display the frame and get window events.
