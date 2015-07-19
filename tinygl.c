@@ -202,19 +202,19 @@ int main(int argc, char **argv) {
 
   // The main draw loop. (Terminates when the user closes the window.)
   while (!glfwWindowShouldClose(window)) {
-    // Position the shape.
-    update_vertices(points, t);
-
     // `phase = sin(4 * t)`
     // Assign to a shader "uniform" variable. A "uniform" is a value passed
     // from the CPU to the GPU that is the same for all invocations (i.e., all
     // vertices).
     glUniform1f(loc_phase, sin(4 * t));
 
+    // Position the shape by updating the `points` array.
+    update_vertices(points, t);
+
     // `position = points`
-    // Similarly, we now need to set the contents of the `position` vertex
-    // list. This is a bit more complicated. We have to "bind" the buffer
-    // first so we can manipulate it.
+    // Set the contents of the `position` vertex list. This is a bit more
+    // complicated than the uniform above: we have to "bind" the buffer first
+    // so we can manipulate it.
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
       // Copy the contents of our CPU-side `points` to the bound GPU buffer.
       glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(points), points);
