@@ -1,7 +1,9 @@
 // This is an example of a trivial OpenGL program with a pair of GLSL
-// shaders. It uses OpenGL 4.1 and [GLFW][] 3.
+// shaders. It uses OpenGL 4.1 and [GLFW][] 3. Check out [the GitHub
+// project][gh] for background and to build and run this program.
 //
 // [glfw]: http://www.glfw.org
+// [gh]: https://github.com/sampsyo/tinygl
 
 #define GLFW_INCLUDE_GLCOREARB
 #include <GLFW/glfw3.h>
