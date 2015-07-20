@@ -17,11 +17,9 @@ $(DOCDIR): $(SOURCE)
 	docco $^
 
 .PHONY: pubdocs
+HTMLFILE := $(SOURCE:%.c=%.html)
 pubdocs: $(DOCDIR)
 	git checkout gh-pages
-	mv $(DOCDIR)/* .
-	rmdir $(DOCDIR)
-	mv $(SOURCE:%.c=%.html) index.html
-	git add .
-	git commit -m "Sync docco output"
+	cp $(DOCDIR)/$(HTMLFILE) index.html
+	git commit -m "Sync docco output" index.html
 	git checkout master
