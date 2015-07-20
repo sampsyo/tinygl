@@ -15,3 +15,13 @@ clean:
 # The documentation.
 $(DOCDIR): $(SOURCE)
 	docco $^
+
+.PHONY: pubdocs
+pubdocs: $(DOCDIR)
+	git checkout gh-pages
+	mv $(DOCDIR)/* .
+	rmdir $(DOCDIR)
+	mv $(SOURCE:%.c=%.html) index.html
+	git add .
+	git commit -m "Sync docco output"
+	git checkout master
