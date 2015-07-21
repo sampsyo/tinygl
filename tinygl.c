@@ -7,11 +7,14 @@
 // [gh]: https://github.com/sampsyo/tinygl
 
 #define GLFW_INCLUDE_GLCOREARB
+#define GL_GLEXT_PROTOTYPES
 #include <GLFW/glfw3.h>
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
 #include <assert.h>
+
+#include <GL/glcorearb.h>
 
 const double PI = 3.141592;
 const unsigned int NVERTICES = 13;

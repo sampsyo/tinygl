@@ -1,8 +1,16 @@
 TARGET := tinygl
 SOURCE := tinygl.c
-CFLAGS := -I/usr/local/include -g -std=gnu11
-LIBFLAGS := -L/usr/local/lib -lglfw3 -framework OpenGL
+CFLAGS := -g
+LIBFLAGS :=
 DOCDIR := docs
+
+ifeq ($(shell uname -s),Darwin)
+	# glfw3, as installed by Homebrew.
+	CFLAGS += -I/usr/local/include
+	LIBFLAGS += -L/usr/local/lib -framework OpenGL -lglfw3
+else
+	LIBFLAGS += -lGL -lglfw -lm
+endif
 
 $(TARGET): $(SOURCE)
 	$(CC) $(CFLAGS) $(LIBFLAGS) -o $@ $^
