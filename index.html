@@ -29,7 +29,8 @@
               </div>
               <p>This is an example of a trivial OpenGL program with a pair of GLSL
 shaders. It uses OpenGL 4.1 and <a href="http://www.glfw.org">GLFW</a> 3. Check out <a href="https://github.com/sampsyo/tinygl">the GitHub
-project</a> for background and to build and run this program.</p>
+project</a> for background and instructions on how to build and run this
+program.</p>
 
             </div>
             
@@ -56,6 +57,16 @@ project</a> for background and to build and run this program.</p>
                 <a class="pilcrow" href="#section-2">&#182;</a>
               </div>
               <h1 id="the-shaders">The Shaders</h1>
+<p>A <em><a href="https://en.wikipedia.org/wiki/Shader">shader</a></em> is a small program that runs on the GPU as part of the
+graphics rendering pipeline. The graphics driver JITs shader programs from
+source code, which are passed in as a string from the application running
+on the CPU. In OpenGL, shader programs are written in <a href="https://www.opengl.org/documentation/glsl/">GLSL</a>.</p>
+<p>Despite the name, shaders are not just for “shading” shapes to determine
+the color of their pixels. One kind of shader (the “fragment” shader in
+OpenGL terminology) does that, but there are several other kinds that
+define other aspects of the rendering pipeline (such as a “vertex” shader,
+which determines the position of each vertex in 3D space). Nothing really
+gets done at all on modern GPUs without shaders.</p>
 
             </div>
             
