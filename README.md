@@ -1,5 +1,5 @@
-tinygl
-======
+tinygl.c
+========
 
 A minuscule OpenGL example with a GLSL shader. This is about as small as it can get and still show how a shader program works. I've tried to comment exhaustively so that graphics-clueless people like myself have a hope of following along.
 

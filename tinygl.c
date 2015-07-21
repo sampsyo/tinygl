@@ -1,6 +1,7 @@
 // This is an example of a trivial OpenGL program with a pair of GLSL
 // shaders. It uses OpenGL 4.1 and [GLFW][] 3. Check out [the GitHub
-// project][gh] for background and to build and run this program.
+// project][gh] for background and instructions on how to build and run this
+// program.
 //
 // [glfw]: http://www.glfw.org
 // [gh]: https://github.com/sampsyo/tinygl
@@ -18,6 +19,21 @@ const unsigned int NDIMENSIONS = 3;
 const unsigned int BUFSIZE = 1024;  // For error logs.
 
 // # The Shaders
+//
+// A *[shader][]* is a small program that runs on the GPU as part of the
+// graphics rendering pipeline. The graphics driver JITs shader programs from
+// source code, which are passed in as a string from the application running
+// on the CPU. In OpenGL, shader programs are written in [GLSL][].
+//
+// Despite the name, shaders are not just for "shading" shapes to determine
+// the color of their pixels. One kind of shader (the "fragment" shader in
+// OpenGL terminology) does that, but there are several other kinds that
+// define other aspects of the rendering pipeline (such as a "vertex" shader,
+// which determines the position of each vertex in 3D space). Nothing really
+// gets done at all on modern GPUs without shaders.
+//
+// [glsl]: https://www.opengl.org/documentation/glsl/
+// [shader]: https://en.wikipedia.org/wiki/Shader
 
 // ## Shader Error Checker
 // Check for errors when compiling or linking the shader program. We need this
