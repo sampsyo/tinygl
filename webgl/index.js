@@ -112,14 +112,10 @@ function init_demo(container) {
       bunny.cells
     , bunny.positions
   ));
-
-  // TODO what on earth does this do?
   geometry.faces(bunny.cells);
 
-  console.log(bunny.cells);
+  // TODO new!
   var cells_buffer = make_buffer(gl, bunny.cells, 'uint16');
-  console.log(cells_buffer);
-  console.log(geometry._index);
 
   // TODO NEW!
   var position = bunny.positions;
@@ -139,11 +135,8 @@ function init_demo(container) {
     cells_buffer
   )
 
-  // TODO
-  geometry._vao = createVAO(gl,
-    attributes,
-    cells_buffer
-  )
+  // TODO remove the first
+  geometry._vao = createVAO(gl, attributes, cells_buffer)
 
   // Create the base matrices to be used
   // when rendering the bunny. Alternatively, can
@@ -194,7 +187,9 @@ function init_demo(container) {
     shader.uniforms.uModel = model;
 
     // Draw it!
-    geometry.draw(gl.TRIANGLES);
+    geometry.update();
+    var count = bunny.cells.length * bunny.cells[0].length;
+    gl.drawElements(gl.TRIANGLES, count, gl.UNSIGNED_SHORT, 0);
   }
 }
 
