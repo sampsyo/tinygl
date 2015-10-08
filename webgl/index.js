@@ -135,8 +135,9 @@ function init_demo(container) {
     cells_buffer
   )
 
-  // TODO remove the first
-  geometry._vao = createVAO(gl, attributes, cells_buffer)
+  // TODO first doesn't work :(
+  // geometry._vao = createVAO(gl, attributes, cells_buffer);
+  geometry._vao = createVAO(gl, geometry._attributes, geometry._index);
 
   // Create the base matrices to be used
   // when rendering the bunny. Alternatively, can
@@ -187,7 +188,6 @@ function init_demo(container) {
     shader.uniforms.uModel = model;
 
     // Draw it!
-    geometry.update();
     var count = bunny.cells.length * bunny.cells[0].length;
     gl.drawElements(gl.TRIANGLES, count, gl.UNSIGNED_SHORT, 0);
   }
