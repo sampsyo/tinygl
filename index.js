@@ -93,6 +93,12 @@ function init_demo(container) {
 
   // The main rendering loop.
   function render() {
+    // TODO TODO Remove this!
+    if(!shader.program) {
+      console.log("relink!");
+      shader._relink()
+    }
+
     // Get the current size of the canvas.
     var width = gl.drawingBufferWidth;
     var height = gl.drawingBufferHeight;
@@ -111,9 +117,11 @@ function init_demo(container) {
     gl.enable(gl.DEPTH_TEST);  // Prevent triangle overlap.
     gl.enable(gl.CULL_FACE);  // Triangles not visible from behind.
 
+    // Use our shader.
+    gl.useProgram(shader.program);
+
     // TODO TODO TODO
     geometry._vao.bind();
-    shader.bind();
     for (var i = 0; i < geometry._keys.length; i++) {
       var attr = shader.attributes[geometry._keys[i]];
       if (attr) attr.location = i;
