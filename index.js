@@ -3,7 +3,6 @@ var fit      = require('canvas-fit')
 var glShader = require('gl-shader')
 var mat4     = require('gl-mat4')
 var normals  = require('normals')
-var glslify  = require('glslify')
 var bunny    = require('bunny')
 
 // Creates a canvas element and attaches
@@ -55,6 +54,26 @@ var view       = mat4.create()
 var height
 var width
 
+var vertex_shader =
+"precision mediump float;" +
+"attribute vec3 aPosition;" +
+"attribute vec3 aNormal;" +
+"varying vec3 vNormal;" +
+"uniform mat4 uProjection;" +
+"uniform mat4 uModel;" +
+"uniform mat4 uView;" +
+"void main() {" +
+  "vNormal = aNormal;" +
+  "gl_Position = uProjection * uView * uModel * vec4(aPosition, 1.0);" +
+"}";
+
+var fragment_shader =
+"precision mediump float;" +
+"varying vec3 vNormal;" +
+"void main() {" +
+  "gl_FragColor = vec4(abs(vNormal), 1.0);" +
+"}";
+
 // Pulls up our shader code and returns an instance
 // of gl-shader. Using the glslify browserify transform,
 // these will be passed through glslify first to pull in
@@ -63,10 +82,7 @@ var width
 // step ahead of time. We can make some dramatic file size
 // savings by doing this in Node rather then at runtime in
 // the browser.
-var shader = glShader(gl,
-    glslify('./shaders/bunny.vert')
-  , glslify('./shaders/bunny.frag')
-)
+var shader = glShader(gl, vertex_shader , fragment_shader);
 
 // The logic/update loop, which updates all of the variables
 // before they're used in our render function. It's optional

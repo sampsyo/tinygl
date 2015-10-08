@@ -1,5 +1,5 @@
 {
-  "name": "bunny-walkthrough",
+  "name": "shader-demo",
   "version": "1.0.0",
   "private": true,
   "browserify": {
@@ -13,7 +13,6 @@
   },
   "dependencies": {
     "beefy": "^2.1.1",
-    "browserify": "^6.2.0",
     "bunny": "^1.0.1",
     "canvas-fit": "^1.2.0",
     "canvas-orbit-camera": "^1.0.0",
