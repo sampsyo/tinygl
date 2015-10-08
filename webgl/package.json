@@ -22,6 +22,7 @@
     "gl-shader": "^4.0.5",
     "glslify": "^2.2.1",
     "normals": "^0.1.0",
-    "gl-vao": "^1.2.1"
+    "gl-vao": "^1.2.1",
+    "browserify": "11.2.0"
   }
 }
