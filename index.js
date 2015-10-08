@@ -27,6 +27,20 @@ var fragment_shader =
   "gl_FragColor = vec4(abs(vNormal), 1.0);" +
 "}";
 
+function projection_matrix(out, width, height) {
+  var aspectRatio = width / height;
+  var fieldOfView = Math.PI / 4;
+  var near = 0.01;
+  var far  = 100;
+
+  mat4.perspective(
+    out,
+    fieldOfView,
+    aspectRatio,
+    near,
+    far
+  )
+}
 
 function init_demo(container) {
   // Create a <canvas> element to do our drawing in. Then set it up to fill
@@ -39,53 +53,20 @@ function init_demo(container) {
   var camera = canvasOrbitCamera(canvas)
 
   // Initialize the OpenGL context with our rendering function.
-  var gl = glContext(canvas, function () {
-    update()
+  var gl = glContext(canvas, render);
 
-    // Sets the viewport, i.e. tells WebGL to draw the
-    // scene across the full canvas.
-    gl.viewport(0, 0, width, height)
-
-    // Enables depth testing, which prevents triangles
-    // from overlapping.
-    gl.enable(gl.DEPTH_TEST)
-
-    // Enables face culling, which prevents triangles
-    // being visible from behind.
-    gl.enable(gl.CULL_FACE)
-
-    // Binds the geometry and sets up the shader's attribute
-    // locations accordingly.
-    geometry.bind(shader)
-
-    // Updates our model/view/projection matrices, sending them
-    // to the GPU as uniform variables that we can use in
-    // `shaders/bunny.vert` and `shaders/bunny.frag`.
-    shader.uniforms.uProjection = projection
-    shader.uniforms.uView = view
-    shader.uniforms.uModel = model
-
-    // Finally: draws the bunny to the screen! The rest is
-    // handled in our shaders.
-    geometry.draw(gl.TRIANGLES)
-  });
-
-  // Load the bunny mesh data (a simplicial complex)
-  // into a gl-geometry instance, calculating vertex
-  // normals for you. A simplicial complex is simply
-  // a list of vertices and faces – conventionally called
-  // `positions` and `cells` respectively. If you're familiar
-  // with three.js, this is essentially equivalent to an array
-  // of `THREE.Vector3` and `THREE.Face3` instances, except specified
-  // as arrays for simplicity and interoperability.
+  // The `gl-geometry` library provides a wrapper for OpenGL buffers and such
+  // to help with loading models and communicating with the shader.
   var geometry = Geometry(gl)
 
+  // This is *super* black-boxy, but it assigns a couple of shader variables
+  // according to the object we're rendering. We should eventually break this
+  // out into the raw OpenGL code for clarity.
   geometry.attr('aPosition', bunny.positions)
   geometry.attr('aNormal', normals.vertexNormals(
       bunny.cells
     , bunny.positions
   ))
-
   geometry.faces(bunny.cells)
 
   // Create the base matrices to be used
@@ -94,51 +75,41 @@ function init_demo(container) {
   var projection = mat4.create()
   var model      = mat4.create()
   var view       = mat4.create()
-  var height
-  var width
 
-  // Pulls up our shader code and returns an instance
-  // of gl-shader. Using the glslify browserify transform,
-  // these will be passed through glslify first to pull in
-  // any external GLSL modules (of which there are none in
-  // this example) and perform the uniform/attribute parsing
-  // step ahead of time. We can make some dramatic file size
-  // savings by doing this in Node rather then at runtime in
-  // the browser.
-  var shader = glShader(gl, vertex_shader , fragment_shader);
+  // Compile and link the shader program.
+  var shader = glShader(gl, vertex_shader, fragment_shader);
 
-  // The logic/update loop, which updates all of the variables
-  // before they're used in our render function. It's optional
-  // for you to keep `update` and `render` as separate steps.
-  function update() {
-    // Updates the width/height we use to render the
-    // final image.
-    width  = gl.drawingBufferWidth
-    height = gl.drawingBufferHeight
+  // The main rendering loop.
+  function render() {
+    // Get the current size of the canvas.
+    var width = gl.drawingBufferWidth;
+    var height = gl.drawingBufferHeight;
 
-    // Updates our camera view matrix.
+    // Handle user input and update the resulting camera view matrix.
     camera.view(view)
-
-    // Optionally, flush the state of the camera. Required
-    // for user input to work correctly.
     camera.tick()
 
-    // Update our projection matrix. This is the bit that's
-    // responsible for taking 3D coordinates and projecting
-    // them into 2D screen space.
-    var aspectRatio = gl.drawingBufferWidth / gl.drawingBufferHeight
-    var fieldOfView = Math.PI / 4
-    var near = 0.01
-    var far  = 100
+    // Update the projection matrix for translating to 2D screen space.
+    projection_matrix(projection, width, height);
 
-    mat4.perspective(projection
-      , fieldOfView
-      , aspectRatio
-      , near
-      , far
-    )
+    // Draw on the whole canvas.
+    gl.viewport(0, 0, width, height);
+
+    // Rendering flags.
+    gl.enable(gl.DEPTH_TEST);  // Prevent triangle overlap.
+    gl.enable(gl.CULL_FACE);  // Triangles not visible from behind.
+
+    // Again, some black-box nonsense with the shader program.
+    geometry.bind(shader);
+
+    // Set the shader parameters.
+    shader.uniforms.uProjection = projection;
+    shader.uniforms.uView = view;
+    shader.uniforms.uModel = model;
+
+    // Draw it!
+    geometry.draw(gl.TRIANGLES);
   }
-
 }
 
 init_demo(document.body);
