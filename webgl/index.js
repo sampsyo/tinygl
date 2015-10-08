@@ -80,8 +80,8 @@ function projection_matrix(out, width, height) {
   )
 }
 
-function make_buffer(gl, data) {
-  return createBuffer(gl, pack(data, 'float32'), gl.ELEMENT_ARRAY_BUFFER);
+function make_buffer(gl, data, type) {
+  return createBuffer(gl, pack(data, type), gl.ELEMENT_ARRAY_BUFFER);
 }
 
 function init_demo(container) {
@@ -116,32 +116,33 @@ function init_demo(container) {
   // TODO what on earth does this do?
   geometry.faces(bunny.cells);
 
+  console.log(bunny.cells);
+  var cells_buffer = make_buffer(gl, bunny.cells, 'uint16');
+  console.log(cells_buffer);
+  console.log(geometry._index);
+
   // TODO NEW!
   var position = bunny.positions;
   var normal = normals.vertexNormals(bunny.cells, bunny.positions);
-  console.log(bunny.positions);
-  console.log(geometry._index);
   var attributes = [
     {
       size: 3,
-      buffer: make_buffer(gl, position),
+      buffer: make_buffer(gl, position, 'float32'),
     },
     {
       size: 3,
-      buffer: make_buffer(gl, normal),
+      buffer: make_buffer(gl, normal, 'float32'),
     }
   ]
-  console.log(geometry._attributes);
-  console.log(attributes);
   var vao = createVAO(gl,
     attributes,
-    geometry._index
+    cells_buffer
   )
 
   // TODO
   geometry._vao = createVAO(gl,
     attributes,
-    geometry._index
+    cells_buffer
   )
 
   // Create the base matrices to be used
