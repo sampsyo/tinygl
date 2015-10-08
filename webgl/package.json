@@ -23,6 +23,8 @@
     "glslify": "^2.2.1",
     "normals": "^0.1.0",
     "gl-vao": "^1.2.1",
-    "browserify": "11.2.0"
+    "browserify": "^11.2.0",
+    "gl-buffer": "^2.1.2",
+    "array-pack-2d": "^0.1.1"
   }
 }

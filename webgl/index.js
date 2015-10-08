@@ -7,6 +7,8 @@ var bunny    = require('bunny')
 var canvasOrbitCamera = require('canvas-orbit-camera')
 var glContext = require('gl-context')
 var createVAO = require('gl-vao')
+var createBuffer = require('gl-buffer')
+var pack = require('array-pack-2d')
 
 var VERTEX_SHADER =
 "precision mediump float;" +
@@ -32,6 +34,37 @@ function get_shader(gl) {
   return glShader(gl, VERTEX_SHADER, FRAGMENT_SHADER);
 }
 
+function compile(gl, type, src) {
+  var shader = gl.createShader(type)
+  gl.shaderSource(shader, src)
+  gl.compileShader(shader)
+  if(!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    var errLog = gl.getShaderInfoLog(shader)
+    console.error('Error compiling shader:', errLog)
+  }
+  return shader
+}
+
+function my_get_shader(gl) {
+  // Compile.
+  var frag = compile(gl, gl.FRAGMENT_SHADER, FRAGMENT_SHADER);
+  var vert = compile(gl, gl.VERTEX_SHADER, VERTEX_SHADER);
+
+  // Link.
+  var program = gl.createProgram()
+  gl.attachShader(program, vert)
+  gl.attachShader(program, frag)
+  gl.linkProgram(program)
+
+  // Check for errors.
+  if(!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    var errLog = gl.getProgramInfoLog(program)
+    console.error('Error linking program:', errLog)
+  }
+
+  return program
+}
+
 function projection_matrix(out, width, height) {
   var aspectRatio = width / height;
   var fieldOfView = Math.PI / 4;
@@ -47,6 +80,10 @@ function projection_matrix(out, width, height) {
   )
 }
 
+function make_buffer(gl, data) {
+  return createBuffer(gl, pack(data, 'float32'), gl.ELEMENT_ARRAY_BUFFER);
+}
+
 function init_demo(container) {
   // Create a <canvas> element to do our drawing in. Then set it up to fill
   // the container and resize when the window resizes.
@@ -60,28 +97,51 @@ function init_demo(container) {
   // Initialize the OpenGL context with our rendering function.
   var gl = glContext(canvas, render);
 
-  // Compile and link the shader program.
+  // TODO replace this
   var shader = get_shader(gl);
+  // TODO NEW!
+  var my_program = my_get_shader(gl);
 
   // The `gl-geometry` library provides a wrapper for OpenGL buffers and such
   // to help with loading models and communicating with the shader.
   var geometry = Geometry(gl);
 
-  // This is *super* black-boxy, but it assigns a couple of shader variables
-  // according to the object we're rendering. We should eventually break this
-  // out into the raw OpenGL code for clarity.
+  // TODO replace this
   geometry.attr('aPosition', bunny.positions);
   geometry.attr('aNormal', normals.vertexNormals(
       bunny.cells
     , bunny.positions
   ));
+
+  // TODO what on earth does this do?
   geometry.faces(bunny.cells);
 
+  // TODO NEW!
+  var position = bunny.positions;
+  var normal = normals.vertexNormals(bunny.cells, bunny.positions);
+  console.log(bunny.positions);
+  console.log(geometry._index);
+  var attributes = [
+    {
+      size: 3,
+      buffer: make_buffer(gl, position),
+    },
+    {
+      size: 3,
+      buffer: make_buffer(gl, normal),
+    }
+  ]
+  console.log(geometry._attributes);
+  console.log(attributes);
+  var vao = createVAO(gl,
+    attributes,
+    geometry._index
+  )
+
   // TODO
-  geometry._vao = createVAO(
-      geometry.gl
-    , geometry._attributes
-    , geometry._index
+  geometry._vao = createVAO(gl,
+    attributes,
+    geometry._index
   )
 
   // Create the base matrices to be used
