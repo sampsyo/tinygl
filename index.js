@@ -6,8 +6,9 @@ var normals  = require('normals')
 var bunny    = require('bunny')
 var canvasOrbitCamera = require('canvas-orbit-camera')
 var glContext = require('gl-context')
+var createVAO = require('gl-vao')
 
-var vertex_shader =
+var VERTEX_SHADER =
 "precision mediump float;" +
 "attribute vec3 aPosition;" +
 "attribute vec3 aNormal;" +
@@ -20,12 +21,16 @@ var vertex_shader =
   "gl_Position = uProjection * uView * uModel * vec4(aPosition, 1.0);" +
 "}";
 
-var fragment_shader =
+var FRAGMENT_SHADER =
 "precision mediump float;" +
 "varying vec3 vNormal;" +
 "void main() {" +
   "gl_FragColor = vec4(abs(vNormal), 1.0);" +
 "}";
+
+function get_shader(gl) {
+  return glShader(gl, VERTEX_SHADER, FRAGMENT_SHADER);
+}
 
 function projection_matrix(out, width, height) {
   var aspectRatio = width / height;
@@ -55,29 +60,36 @@ function init_demo(container) {
   // Initialize the OpenGL context with our rendering function.
   var gl = glContext(canvas, render);
 
+  // Compile and link the shader program.
+  var shader = get_shader(gl);
+
   // The `gl-geometry` library provides a wrapper for OpenGL buffers and such
   // to help with loading models and communicating with the shader.
-  var geometry = Geometry(gl)
+  var geometry = Geometry(gl);
 
   // This is *super* black-boxy, but it assigns a couple of shader variables
   // according to the object we're rendering. We should eventually break this
   // out into the raw OpenGL code for clarity.
-  geometry.attr('aPosition', bunny.positions)
+  geometry.attr('aPosition', bunny.positions);
   geometry.attr('aNormal', normals.vertexNormals(
       bunny.cells
     , bunny.positions
-  ))
-  geometry.faces(bunny.cells)
+  ));
+  geometry.faces(bunny.cells);
+
+  // TODO
+  geometry._vao = createVAO(
+      geometry.gl
+    , geometry._attributes
+    , geometry._index
+  )
 
   // Create the base matrices to be used
   // when rendering the bunny. Alternatively, can
   // be created using `new Float32Array(16)`
-  var projection = mat4.create()
-  var model      = mat4.create()
-  var view       = mat4.create()
-
-  // Compile and link the shader program.
-  var shader = glShader(gl, vertex_shader, fragment_shader);
+  var projection = mat4.create();
+  var model      = mat4.create();
+  var view       = mat4.create();
 
   // The main rendering loop.
   function render() {
@@ -86,8 +98,8 @@ function init_demo(container) {
     var height = gl.drawingBufferHeight;
 
     // Handle user input and update the resulting camera view matrix.
-    camera.view(view)
-    camera.tick()
+    camera.view(view);
+    camera.tick();
 
     // Update the projection matrix for translating to 2D screen space.
     projection_matrix(projection, width, height);
@@ -99,8 +111,13 @@ function init_demo(container) {
     gl.enable(gl.DEPTH_TEST);  // Prevent triangle overlap.
     gl.enable(gl.CULL_FACE);  // Triangles not visible from behind.
 
-    // Again, some black-box nonsense with the shader program.
-    geometry.bind(shader);
+    // TODO TODO TODO
+    geometry._vao.bind();
+    shader.bind();
+    for (var i = 0; i < geometry._keys.length; i++) {
+      var attr = shader.attributes[geometry._keys[i]];
+      if (attr) attr.location = i;
+    }
 
     // Set the shader parameters.
     shader.uniforms.uProjection = projection;
