@@ -101,22 +101,21 @@ function init_demo(container) {
   shader.attributes['aPosition'].location = 0;
   shader.attributes['aNormal'].location = 1;
   shader._relink();
-
+  /*
   var locations = {
     'uProjection': gl.getUniformLocation(shader.program, 'uProjection'),
     'uView': gl.getUniformLocation(shader.program, 'uView'),
     'uModel': gl.getUniformLocation(shader.program, 'uModel'),
   };
+  */
 
   // TODO NEW!
   var my_program = my_get_shader(gl);
-  /*
   var locations = {
     'uProjection': gl.getUniformLocation(my_program, 'uProjection'),
     'uView': gl.getUniformLocation(my_program, 'uView'),
     'uModel': gl.getUniformLocation(my_program, 'uModel'),
   };
-  */
 
   // TODO new!
   var cells_buffer = make_buffer(gl, bunny.cells, 'uint16', gl.ELEMENT_ARRAY_BUFFER);
@@ -167,9 +166,9 @@ function init_demo(container) {
     gl.enable(gl.CULL_FACE);  // Triangles not visible from behind.
 
     // Use our shader.
-    gl.useProgram(shader.program);
+    // gl.useProgram(shader.program);
     // TODO
-    // gl.useProgram(my_program);
+    gl.useProgram(my_program);
 
     // Set the shader "uniform" parameters.
     gl.uniformMatrix4fv(locations['uProjection'], false, projection);
