@@ -98,6 +98,10 @@ function init_demo(container) {
 
   // TODO replace this
   var shader = get_shader(gl);
+  shader.attributes['aPosition'].location = 0;
+  shader.attributes['aNormal'].location = 1;
+  shader._relink();
+
   // TODO NEW!
   var my_program = my_get_shader(gl);
 
@@ -131,12 +135,6 @@ function init_demo(container) {
 
   // The main rendering loop.
   function render() {
-    // TODO TODO Remove this!
-    if(!shader.program) {
-      console.log("relink!");
-      shader._relink()
-    }
-
     // Get the current size of the canvas.
     var width = gl.drawingBufferWidth;
     var height = gl.drawingBufferHeight;
@@ -160,8 +158,6 @@ function init_demo(container) {
 
     // TODO TODO TODO
     vao.bind();
-    shader.attributes['aPosition'].location = 0;
-    shader.attributes['aNormal'].location = 1;
 
     // Set the shader parameters.
     shader.uniforms.uProjection = projection;
