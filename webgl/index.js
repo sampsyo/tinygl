@@ -4,7 +4,6 @@ var normals  = require('normals')
 var bunny    = require('bunny')
 var canvasOrbitCamera = require('canvas-orbit-camera')
 var glContext = require('gl-context')
-var createBuffer = require('gl-buffer')
 var pack = require('array-pack-2d')
 
 var VERTEX_SHADER =
@@ -76,7 +75,17 @@ function projection_matrix(out, width, height) {
 }
 
 function make_buffer(gl, data, type, mode) {
-  return createBuffer(gl, pack(data, type), mode);
+  // Initialize a buffer.
+  var buf = gl.createBuffer();
+
+  // Flatten the data to a packed array.
+  var arr = pack(data, type);
+
+  // Insert the data into the buffer.
+  gl.bindBuffer(mode, buf);
+  gl.bufferData(mode, arr, gl.STATIC_DRAW);
+
+  return buf;
 }
 
 function init_demo(container) {
@@ -150,18 +159,18 @@ function init_demo(container) {
     // vao.bind();
 
     // TODO
-    gl.bindBuffer(gl.ARRAY_BUFFER, position_buffer.handle);
+    gl.bindBuffer(gl.ARRAY_BUFFER, position_buffer);
     gl.vertexAttribPointer(locations['aPosition'], 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(locations['aPosition']);
 
     // TODO
-    gl.bindBuffer(gl.ARRAY_BUFFER, normal_buffer.handle);
+    gl.bindBuffer(gl.ARRAY_BUFFER, normal_buffer);
     gl.vertexAttribPointer(locations['aNormal'], 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(locations['aNormal']);
 
     // TODO
     // also, what is an *element* array? TODO
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cells_buffer.handle);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cells_buffer);
 
     // Draw it!
     var count = bunny.cells.length * bunny.cells[0].length;
