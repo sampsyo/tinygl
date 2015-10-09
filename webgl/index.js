@@ -1,4 +1,3 @@
-var Geometry = require('gl-geometry')
 var fit      = require('canvas-fit')
 var glShader = require('gl-shader')
 var mat4     = require('gl-mat4')
@@ -102,18 +101,6 @@ function init_demo(container) {
   // TODO NEW!
   var my_program = my_get_shader(gl);
 
-  // The `gl-geometry` library provides a wrapper for OpenGL buffers and such
-  // to help with loading models and communicating with the shader.
-  var geometry = Geometry(gl);
-
-  // TODO replace this
-  geometry.attr('aPosition', bunny.positions);
-  geometry.attr('aNormal', normals.vertexNormals(
-      bunny.cells
-    , bunny.positions
-  ));
-  geometry.faces(bunny.cells);
-
   // TODO new!
   var cells_buffer = make_buffer(gl, bunny.cells, 'uint16', gl.ELEMENT_ARRAY_BUFFER);
 
@@ -134,11 +121,6 @@ function init_demo(container) {
     attributes,
     cells_buffer
   )
-
-  geometry._vao = createVAO(gl, attributes, cells_buffer);
-
-  console.log(attributes);
-  console.log(geometry._attributes);
 
   // Create the base matrices to be used
   // when rendering the bunny. Alternatively, can
@@ -177,11 +159,9 @@ function init_demo(container) {
     gl.useProgram(shader.program);
 
     // TODO TODO TODO
-    geometry._vao.bind();
-    for (var i = 0; i < geometry._keys.length; i++) {
-      var attr = shader.attributes[geometry._keys[i]];
-      if (attr) attr.location = i;
-    }
+    vao.bind();
+    shader.attributes['aPosition'].location = 0;
+    shader.attributes['aNormal'].location = 1;
 
     // Set the shader parameters.
     shader.uniforms.uProjection = projection;
