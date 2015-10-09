@@ -80,8 +80,8 @@ function projection_matrix(out, width, height) {
   )
 }
 
-function make_buffer(gl, data, type) {
-  return createBuffer(gl, pack(data, type), gl.ELEMENT_ARRAY_BUFFER);
+function make_buffer(gl, data, type, mode) {
+  return createBuffer(gl, pack(data, type), mode);
 }
 
 function init_demo(container) {
@@ -115,7 +115,7 @@ function init_demo(container) {
   geometry.faces(bunny.cells);
 
   // TODO new!
-  var cells_buffer = make_buffer(gl, bunny.cells, 'uint16');
+  var cells_buffer = make_buffer(gl, bunny.cells, 'uint16', gl.ELEMENT_ARRAY_BUFFER);
 
   // TODO NEW!
   var position = bunny.positions;
@@ -123,11 +123,11 @@ function init_demo(container) {
   var attributes = [
     {
       size: 3,
-      buffer: make_buffer(gl, position, 'float32'),
+      buffer: make_buffer(gl, position, 'float32', gl.ARRAY_BUFFER),
     },
     {
       size: 3,
-      buffer: make_buffer(gl, normal, 'float32'),
+      buffer: make_buffer(gl, normal, 'float32', gl.ARRAY_BUFFER),
     }
   ]
   var vao = createVAO(gl,
@@ -135,9 +135,10 @@ function init_demo(container) {
     cells_buffer
   )
 
-  // TODO first doesn't work :(
-  // geometry._vao = createVAO(gl, attributes, cells_buffer);
-  geometry._vao = createVAO(gl, geometry._attributes, geometry._index);
+  geometry._vao = createVAO(gl, attributes, cells_buffer);
+
+  console.log(attributes);
+  console.log(geometry._attributes);
 
   // Create the base matrices to be used
   // when rendering the bunny. Alternatively, can
