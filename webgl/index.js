@@ -102,8 +102,21 @@ function init_demo(container) {
   shader.attributes['aNormal'].location = 1;
   shader._relink();
 
+  var locations = {
+    'uProjection': gl.getUniformLocation(shader.program, 'uProjection'),
+    'uView': gl.getUniformLocation(shader.program, 'uView'),
+    'uModel': gl.getUniformLocation(shader.program, 'uModel'),
+  };
+
   // TODO NEW!
   var my_program = my_get_shader(gl);
+  /*
+  var locations = {
+    'uProjection': gl.getUniformLocation(my_program, 'uProjection'),
+    'uView': gl.getUniformLocation(my_program, 'uView'),
+    'uModel': gl.getUniformLocation(my_program, 'uModel'),
+  };
+  */
 
   // TODO new!
   var cells_buffer = make_buffer(gl, bunny.cells, 'uint16', gl.ELEMENT_ARRAY_BUFFER);
@@ -155,14 +168,16 @@ function init_demo(container) {
 
     // Use our shader.
     gl.useProgram(shader.program);
+    // TODO
+    // gl.useProgram(my_program);
 
-    // TODO TODO TODO
+    // Set the shader "uniform" parameters.
+    gl.uniformMatrix4fv(locations['uProjection'], false, projection);
+    gl.uniformMatrix4fv(locations['uView'], false, view);
+    gl.uniformMatrix4fv(locations['uModel'], false, model);
+
+    // Bind our VAO to communicate the vertex (varying) data to the shader.
     vao.bind();
-
-    // Set the shader parameters.
-    shader.uniforms.uProjection = projection;
-    shader.uniforms.uView = view;
-    shader.uniforms.uModel = model;
 
     // Draw it!
     var count = bunny.cells.length * bunny.cells[0].length;
