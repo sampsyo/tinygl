@@ -1,5 +1,4 @@
 var fit      = require('canvas-fit')
-var glShader = require('gl-shader')
 var mat4     = require('gl-mat4')
 var normals  = require('normals')
 var bunny    = require('bunny')
@@ -29,10 +28,6 @@ var FRAGMENT_SHADER =
   "gl_FragColor = vec4(abs(vNormal), 1.0);" +
 "}";
 
-function get_shader(gl) {
-  return glShader(gl, VERTEX_SHADER, FRAGMENT_SHADER);
-}
-
 function compile(gl, type, src) {
   var shader = gl.createShader(type)
   gl.shaderSource(shader, src)
@@ -46,8 +41,10 @@ function compile(gl, type, src) {
 
 function my_get_shader(gl) {
   // Compile.
-  var frag = compile(gl, gl.FRAGMENT_SHADER, FRAGMENT_SHADER);
+  // Bizarrely, compiling these in the opposite order leads to very strange
+  // effects.
   var vert = compile(gl, gl.VERTEX_SHADER, VERTEX_SHADER);
+  var frag = compile(gl, gl.FRAGMENT_SHADER, FRAGMENT_SHADER);
 
   // Link.
   var program = gl.createProgram()
@@ -95,19 +92,6 @@ function init_demo(container) {
 
   // Initialize the OpenGL context with our rendering function.
   var gl = glContext(canvas, render);
-
-  // TODO replace this
-  var shader = get_shader(gl);
-  shader.attributes['aPosition'].location = 0;
-  shader.attributes['aNormal'].location = 1;
-  shader._relink();
-  /*
-  var locations = {
-    'uProjection': gl.getUniformLocation(shader.program, 'uProjection'),
-    'uView': gl.getUniformLocation(shader.program, 'uView'),
-    'uModel': gl.getUniformLocation(shader.program, 'uModel'),
-  };
-  */
 
   // TODO NEW!
   var my_program = my_get_shader(gl);
@@ -166,8 +150,6 @@ function init_demo(container) {
     gl.enable(gl.CULL_FACE);  // Triangles not visible from behind.
 
     // Use our shader.
-    // gl.useProgram(shader.program);
-    // TODO
     gl.useProgram(my_program);
 
     // Set the shader "uniform" parameters.
