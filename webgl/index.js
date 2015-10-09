@@ -4,7 +4,6 @@ var normals  = require('normals')
 var bunny    = require('bunny')
 var canvasOrbitCamera = require('canvas-orbit-camera')
 var glContext = require('gl-context')
-var createVAO = require('gl-vao')
 var createBuffer = require('gl-buffer')
 var pack = require('array-pack-2d')
 
@@ -83,12 +82,12 @@ function make_buffer(gl, data, type, mode) {
 function init_demo(container) {
   // Create a <canvas> element to do our drawing in. Then set it up to fill
   // the container and resize when the window resizes.
-  var canvas = container.appendChild(document.createElement('canvas'))
-  window.addEventListener('resize', fit(canvas), false)
+  var canvas = container.appendChild(document.createElement('canvas'));
+  window.addEventListener('resize', fit(canvas), false);
 
   // Attach a `canvas-orbit-camera` thing, which handles user input for
   // manipulating the view.
-  var camera = canvasOrbitCamera(canvas)
+  var camera = canvasOrbitCamera(canvas);
 
   // Initialize the OpenGL context with our rendering function.
   var gl = glContext(canvas, render);
@@ -99,6 +98,8 @@ function init_demo(container) {
     'uProjection': gl.getUniformLocation(my_program, 'uProjection'),
     'uView': gl.getUniformLocation(my_program, 'uView'),
     'uModel': gl.getUniformLocation(my_program, 'uModel'),
+    'aPosition': gl.getAttribLocation(my_program, 'aPosition'),
+    'aNormal': gl.getAttribLocation(my_program, 'aNormal'),
   };
 
   // TODO new!
@@ -107,20 +108,8 @@ function init_demo(container) {
   // TODO NEW!
   var position = bunny.positions;
   var normal = normals.vertexNormals(bunny.cells, bunny.positions);
-  var attributes = [
-    {
-      size: 3,
-      buffer: make_buffer(gl, position, 'float32', gl.ARRAY_BUFFER),
-    },
-    {
-      size: 3,
-      buffer: make_buffer(gl, normal, 'float32', gl.ARRAY_BUFFER),
-    }
-  ]
-  var vao = createVAO(gl,
-    attributes,
-    cells_buffer
-  )
+  var position_buffer = make_buffer(gl, position, 'float32', gl.ARRAY_BUFFER);
+  var normal_buffer = make_buffer(gl, normal, 'float32', gl.ARRAY_BUFFER);
 
   // Create the base matrices to be used
   // when rendering the bunny. Alternatively, can
@@ -158,7 +147,21 @@ function init_demo(container) {
     gl.uniformMatrix4fv(locations['uModel'], false, model);
 
     // Bind our VAO to communicate the vertex (varying) data to the shader.
-    vao.bind();
+    // vao.bind();
+
+    // TODO
+    gl.bindBuffer(gl.ARRAY_BUFFER, position_buffer.handle);
+    gl.vertexAttribPointer(locations['aPosition'], 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(locations['aPosition']);
+
+    // TODO
+    gl.bindBuffer(gl.ARRAY_BUFFER, normal_buffer.handle);
+    gl.vertexAttribPointer(locations['aNormal'], 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(locations['aNormal']);
+
+    // TODO
+    // also, what is an *element* array? TODO
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cells_buffer.handle);
 
     // Draw it!
     var count = bunny.cells.length * bunny.cells[0].length;
