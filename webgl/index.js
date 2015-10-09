@@ -1,10 +1,12 @@
-var fit      = require('canvas-fit')
-var mat4     = require('gl-mat4')
-var normals  = require('normals')
-var bunny    = require('bunny')
-var canvasOrbitCamera = require('canvas-orbit-camera')
-var glContext = require('gl-context')
-var pack = require('array-pack-2d')
+"use strict";
+
+var fit = require('canvas-fit');
+var mat4 = require('gl-mat4');
+var normals = require('normals');
+var bunny = require('bunny');
+var canvasOrbitCamera = require('canvas-orbit-camera');
+var glContext = require('gl-context');
+var pack = require('array-pack-2d');
 
 var VERTEX_SHADER =
 "precision mediump float;" +
@@ -26,6 +28,8 @@ var FRAGMENT_SHADER =
   "gl_FragColor = vec4(abs(vNormal), 1.0);" +
 "}";
 
+// Compile a single shader program, given the type (gl.VERTEX_SHADER,
+// gl.FRAGMENT_SHADER, etc.) and the source code.
 function compile(gl, type, src) {
   var shader = gl.createShader(type)
   gl.shaderSource(shader, src)
@@ -37,12 +41,14 @@ function compile(gl, type, src) {
   return shader
 }
 
-function my_get_shader(gl) {
+// Compile and link an entire shader program consisting of a vertex shader
+// and a fragment shader.
+function get_shader(gl, vertex_source, fragment_source) {
   // Compile.
   // Bizarrely, compiling these in the opposite order leads to very strange
-  // effects.
-  var vert = compile(gl, gl.VERTEX_SHADER, VERTEX_SHADER);
-  var frag = compile(gl, gl.FRAGMENT_SHADER, FRAGMENT_SHADER);
+  // effects (but not errors!).
+  var vert = compile(gl, gl.VERTEX_SHADER, vertex_source);
+  var frag = compile(gl, gl.FRAGMENT_SHADER, fragment_source);
 
   // Link.
   var program = gl.createProgram()
@@ -59,19 +65,15 @@ function my_get_shader(gl) {
   return program
 }
 
+// Compute a project matrix (placed in the `out` matrix allocation) given the
+// width and height of a viewport.
 function projection_matrix(out, width, height) {
   var aspectRatio = width / height;
   var fieldOfView = Math.PI / 4;
   var near = 0.01;
   var far  = 100;
 
-  mat4.perspective(
-    out,
-    fieldOfView,
-    aspectRatio,
-    near,
-    far
-  )
+  mat4.perspective(out, fieldOfView, aspectRatio, near, far)
 }
 
 function make_buffer(gl, data, type, mode) {
@@ -88,7 +90,36 @@ function make_buffer(gl, data, type, mode) {
   return buf;
 }
 
-function init_demo(container) {
+// Given a mesh, with the fields `positions` and `cells`, create three buffers
+// for drawing the thing. Return an object with the fields:
+// - `cells`, a 3-dimensional uint16 element array buffer
+// - `positions`, a 3-dimensional float32 array buffer
+// - `normals`, ditto
+function mesh_buffers(gl, obj) {
+  var norm = normals.vertexNormals(bunny.cells, bunny.positions);
+
+  return {
+    cells: make_buffer(gl, obj.cells, 'uint16', gl.ELEMENT_ARRAY_BUFFER),
+    positions: make_buffer(gl, obj.positions, 'float32', gl.ARRAY_BUFFER),
+    normals: make_buffer(gl, norm, 'float32', gl.ARRAY_BUFFER),
+  }
+}
+
+// Set a buffer as an attribute array.
+function bind_attrib_buffer(gl, location, buffer) {
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.vertexAttribPointer(location, 3, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(location);
+}
+
+// Set a buffer as the element array.
+function bind_element_buffer(gl, buffer) {
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer);
+}
+
+// Our shader demo. Set up the demo in a container element (a <canvas> element
+// is added therein).
+function demo(container) {
   // Create a <canvas> element to do our drawing in. Then set it up to fill
   // the container and resize when the window resizes.
   var canvas = container.appendChild(document.createElement('canvas'));
@@ -101,8 +132,8 @@ function init_demo(container) {
   // Initialize the OpenGL context with our rendering function.
   var gl = glContext(canvas, render);
 
-  // TODO NEW!
-  var my_program = my_get_shader(gl);
+  // Compile the shader program.
+  var my_program = get_shader(gl, VERTEX_SHADER, FRAGMENT_SHADER);
   var locations = {
     'uProjection': gl.getUniformLocation(my_program, 'uProjection'),
     'uView': gl.getUniformLocation(my_program, 'uView'),
@@ -111,14 +142,8 @@ function init_demo(container) {
     'aNormal': gl.getAttribLocation(my_program, 'aNormal'),
   };
 
-  // TODO new!
-  var cells_buffer = make_buffer(gl, bunny.cells, 'uint16', gl.ELEMENT_ARRAY_BUFFER);
-
-  // TODO NEW!
-  var position = bunny.positions;
-  var normal = normals.vertexNormals(bunny.cells, bunny.positions);
-  var position_buffer = make_buffer(gl, position, 'float32', gl.ARRAY_BUFFER);
-  var normal_buffer = make_buffer(gl, normal, 'float32', gl.ARRAY_BUFFER);
+  // Load the shape data into buffers.
+  var bunny_buffers = mesh_buffers(gl, bunny);
 
   // Create the base matrices to be used
   // when rendering the bunny. Alternatively, can
@@ -158,19 +183,13 @@ function init_demo(container) {
     // Bind our VAO to communicate the vertex (varying) data to the shader.
     // vao.bind();
 
-    // TODO
-    gl.bindBuffer(gl.ARRAY_BUFFER, position_buffer);
-    gl.vertexAttribPointer(locations['aPosition'], 3, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(locations['aPosition']);
+    // Set the attribute arrays.
+    bind_attrib_buffer(gl, locations.aPosition, bunny_buffers.positions);
+    bind_attrib_buffer(gl, locations.aNormal, bunny_buffers.normals);
 
-    // TODO
-    gl.bindBuffer(gl.ARRAY_BUFFER, normal_buffer);
-    gl.vertexAttribPointer(locations['aNormal'], 3, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(locations['aNormal']);
-
-    // TODO
-    // also, what is an *element* array? TODO
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cells_buffer);
+    // And the element array.
+    // TODO What is an element array?
+    bind_element_buffer(gl, bunny_buffers.cells);
 
     // Draw it!
     var count = bunny.cells.length * bunny.cells[0].length;
@@ -178,4 +197,4 @@ function init_demo(container) {
   }
 }
 
-init_demo(document.body);
+demo(document.body);
