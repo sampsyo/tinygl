@@ -180,9 +180,6 @@ function demo(container) {
     gl.uniformMatrix4fv(locations['uView'], false, view);
     gl.uniformMatrix4fv(locations['uModel'], false, model);
 
-    // Bind our VAO to communicate the vertex (varying) data to the shader.
-    // vao.bind();
-
     // Set the attribute arrays.
     bind_attrib_buffer(gl, locations.aPosition, bunny_buffers.positions);
     bind_attrib_buffer(gl, locations.aNormal, bunny_buffers.normals);
