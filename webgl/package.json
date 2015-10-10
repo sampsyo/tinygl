@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "beefy index.js --open",
-    "pages": "browserify index.js -o bundle.js"
+    "start": "beefy tinygl.js --open",
+    "pages": "browserify tinygl.js -o bundle.js"
   },
   "dependencies": {
     "beefy": "^2.1.1",
