@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "beefy tinygl.js --open",
-    "pages": "browserify tinygl.js -o bundle.js"
+    "build": "browserify tinygl.js -o bundle.js"
   },
   "dependencies": {
     "beefy": "^2.1.1",
