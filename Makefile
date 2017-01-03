@@ -30,4 +30,5 @@ RSYNCARGS := --compress --recursive --checksum --itemize-changes \
 	--delete -e ssh
 DEST := dh:domains/adriansampson.net/doc/tinygl
 deploy: $(DOCDIR)
+	mv $(DOCDIR)/$(SOURCE:%.c=%.html) $(DOCDIR)/index.html
 	rsync $(RSYNCARGS) $(DOCDIR)/ $(DEST)
