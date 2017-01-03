@@ -3,8 +3,14 @@
 // project][gh] for background and instructions on how to build and run this
 // program.
 //
+// The annotated code is by [Adrian Sampson][] and based on an original
+// example by [Akihiko Fujii][]. The license is [MIT][].
+//
 // [glfw]: http://www.glfw.org
 // [gh]: https://github.com/sampsyo/tinygl
+// [Adrian Sampson]: http://www.cs.cornell.edu/~asampson/
+// [Akihiko Fujii]: https://github.com/akihiko-fujii
+// [mit]: https://opensource.org/licenses/MIT
 
 #define GLFW_INCLUDE_GLCOREARB
 #define GL_GLEXT_PROTOTYPES

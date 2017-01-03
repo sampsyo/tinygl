@@ -5,7 +5,7 @@ A minuscule OpenGL example with a GLSL shader. This is about as small as it can 
 
 See [the source displayed in a literate-programming style][rendered] for nicer reading.
 
-[rendered]: http://sampsyo.github.io/tinygl/
+[rendered]: http://adriansampson.net/doc/tinygl/
 
 
 Run It
