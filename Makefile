@@ -24,10 +24,10 @@ clean:
 $(DOCDIR): $(SOURCE)
 	docco $^
 
-.PHONY: pubdocs
-HTMLFILE := $(SOURCE:%.c=%.html)
-pubdocs: $(DOCDIR)
-	git checkout gh-pages
-	cp $(DOCDIR)/$(HTMLFILE) index.html
-	git commit -m "Sync docco output" index.html
-	git checkout master
+# Deploy documentation to server.
+.PHONY: deploy
+RSYNCARGS := --compress --recursive --checksum --itemize-changes \
+	--delete -e ssh
+DEST := dh:domains/adriansampson.net/doc/tinygl
+deploy: $(DOCDIR)
+	rsync $(RSYNCARGS) $(DOCDIR)/ $(DEST)
