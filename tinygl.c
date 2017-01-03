@@ -12,13 +12,13 @@
 // [Akihiko Fujii]: https://github.com/akihiko-fujii
 // [mit]: https://opensource.org/licenses/MIT
 
-#define GLFW_INCLUDE_GLCOREARB
-#define GL_GLEXT_PROTOTYPES
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
 #include <assert.h>
 
+#define GLFW_INCLUDE_GLCOREARB
+#define GL_GLEXT_PROTOTYPES
 #include <GLFW/glfw3.h>
 #ifndef __APPLE__
 #include <GL/glcorearb.h>
