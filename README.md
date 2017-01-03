@@ -11,7 +11,7 @@ See [the source displayed in a literate-programming style][rendered] for nicer r
 Run It
 ------
 
-The Makefile may need adaptation for your platform (I set it up for OS X). You will need OpenGL 4.1 (or later, I think) and [GLFW 3.x][glfw]. Then:
+The Makefile may need adaptation for your platform (I set it up for macOS). You will need OpenGL 4.1 (or later, I think) and [GLFW 3.x][glfw]. Then:
 
     $ make
     $ ./tinygl
