@@ -38,7 +38,7 @@ function compile(gl, type, src) {
     var errLog = gl.getShaderInfoLog(shader)
     console.error('Error compiling shader:', errLog)
   }
-  return shader
+  return shader;
 }
 
 // Compile and link an entire shader program consisting of a vertex shader

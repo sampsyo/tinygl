@@ -8,13 +8,15 @@
 
 #define GLFW_INCLUDE_GLCOREARB
 #define GL_GLEXT_PROTOTYPES
-#include <GLFW/glfw3.h>
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
 #include <assert.h>
 
+#include <GLFW/glfw3.h>
+#ifndef __APPLE__
 #include <GL/glcorearb.h>
+#endif
 
 const double PI = 3.141592;
 const unsigned int NVERTICES = 13;
