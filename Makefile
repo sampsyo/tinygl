@@ -5,9 +5,9 @@ LIBFLAGS :=
 DOCDIR := docs
 
 ifeq ($(shell uname -s),Darwin)
-	# glfw3, as installed by Homebrew.
+	# glfw, as installed by Homebrew.
 	CFLAGS += -I/usr/local/include
-	LIBFLAGS += -L/usr/local/lib -framework OpenGL -lglfw3
+	LIBFLAGS += -L/usr/local/lib -framework OpenGL -lglfw
 else
 	LIBFLAGS += -lGL -lglfw -lm
 endif
