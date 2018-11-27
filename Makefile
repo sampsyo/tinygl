@@ -1,24 +1,21 @@
-TARGET := tinygl
 SOURCE := tinygl.c
 CFLAGS := -g
-LIBFLAGS :=
 DOCDIR := docs
 
 ifeq ($(shell uname -s),Darwin)
 	# glfw, as installed by Homebrew.
 	CFLAGS += -I/usr/local/include
-	LIBFLAGS += -L/usr/local/lib -framework OpenGL -lglfw
+	LDLIBS := -L/usr/local/lib -framework OpenGL -lglfw
 else
-	LIBFLAGS += -lGL -lglfw -lm
+	LDLIBS := -lGL -lglfw -lm
 endif
 
+TARGET := $(basename $(SOURCE))
 $(TARGET): $(SOURCE)
-	$(CC) $(CFLAGS) $(LIBFLAGS) -o $@ $^
 
 .PHONY: clean
 clean:
-	rm -f $(TARGET)
-	rm -rf $(DOCDIR)
+	$(RM) -r $(TARGET) $(DOCDIR)
 
 # The documentation.
 $(DOCDIR): $(SOURCE)
